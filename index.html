@@ -1,172 +1,146 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Super Hyper Entertainment</title>
   <style>
     body {
+      font-family: Arial, sans-serif;
       margin: 0;
-      font-family: Arial, Helvetica, sans-serif;
-      line-height: 1.7;
-      color: #222;
-      background: #fafafa;
+      padding: 0;
+      line-height: 1.6;
+      background: #f9f9f9;
     }
 
     /* Header */
     header {
-      position: fixed;
-      top: 0;
-      width: 100%;
-      background: #0a0a0a;
-      color: white;
+      background: #222;
+      color: #fff;
+      padding: 1rem;
       display: flex;
-      align-items: center;
       justify-content: space-between;
-      padding: 15px 20px;
-      z-index: 1000;
+      align-items: center;
     }
 
     header h1 {
       margin: 0;
-      font-size: 1.4rem;
+      font-size: 1.5rem;
     }
 
-    /* Hamburger Menu */
-    .menu-btn {
+    /* Hamburger */
+    .hamburger {
+      font-size: 1.8rem;
       cursor: pointer;
-      display: flex;
-      flex-direction: column;
-      gap: 5px;
-    }
-
-    .menu-btn span {
       display: block;
-      width: 25px;
-      height: 3px;
-      background: white;
     }
 
-    /* Sidebar Navigation */
-    nav {
-      position: fixed;
-      top: 0;
-      right: -250px;
+    /* Sidebar menu */
+    .sidebar {
       height: 100%;
       width: 250px;
-      background: #111;
-      padding: 60px 20px;
-      transition: right 0.3s ease-in-out;
+      position: fixed;
+      top: 0;
+      left: -250px;
+      background: #333;
+      color: #fff;
+      overflow-x: hidden;
+      transition: 0.3s;
+      padding-top: 60px;
     }
 
-    nav.active {
-      right: 0;
-    }
-
-    nav a {
+    .sidebar a {
+      padding: 10px 20px;
       display: block;
-      color: white;
       text-decoration: none;
-      margin: 20px 0;
-      font-size: 1.2rem;
+      color: #fff;
     }
 
-    /* Main content */
+    .sidebar a:hover {
+      background: #575757;
+    }
+
+    /* Content */
     main {
-      padding: 100px 20px 50px;
-      max-width: 900px;
-      margin: 0 auto;
+      padding: 2rem;
+      max-width: 800px;
+      margin: auto;
     }
 
-    section {
-      margin-bottom: 60px;
+    h2 {
+      color: #222;
+      margin-top: 2rem;
     }
 
-    section h2 {
-      font-size: 2rem;
-      margin-bottom: 20px;
-      color: #0a0a0a;
-    }
-
-    section p {
+    p {
       font-size: 1.2rem;
-      text-align: justify;
+      margin-bottom: 1.5rem;
     }
 
-    /* Contact section */
-    .contact {
-      background: #eee;
-      padding: 30px;
-      border-radius: 8px;
+    /* Dark overlay when menu is open */
+    #overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 0;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      transition: 0.3s;
+      z-index: 1;
     }
-
-    .contact a {
-      color: #0066cc;
-      text-decoration: none;
-      font-weight: bold;
-    }
-
   </style>
 </head>
 <body>
   <header>
     <h1>Super Hyper Entertainment</h1>
-    <div class="menu-btn" onclick="toggleMenu()">
-      <span></span>
-      <span></span>
-      <span></span>
-    </div>
+    <span class="hamburger" onclick="toggleSidebar()">☰</span>
   </header>
 
-  <nav id="nav">
-    <a href="#about">About Us</a>
-    <a href="#projects">Our Work</a>
-    <a href="#contact">Contact</a>
-  </nav>
+  <!-- Sidebar -->
+  <div id="overlay" onclick="toggleSidebar()"></div>
+  <div id="mySidebar" class="sidebar">
+    <a href="#">Home</a>
+    <a href="#">Projects</a>
+    <a href="#">Contact</a>
+    <a href="#">About</a>
+  </div>
 
+  <!-- Main content -->
   <main>
-    <section id="about">
-      <h2>About Us</h2>
-      <p>
-        Super Hyper Entertainment is dedicated to helping small projects get discovered and thrive. 
-        We provide a platform where indie developers, creators, and small studios can showcase their work without 
-        getting overshadowed by massive corporations. Our mission is to highlight creativity, originality, and 
-        passion projects that deserve a chance to shine.
-      </p>
-      <p>
-        Whether it's games, animations, or interactive experiences, we give these projects a stage where they 
-        can find players, supporters, and communities. By hosting tournaments, events, and creative showcases, 
-        we ensure that every project—big or small—has the opportunity to make an impact.
-      </p>
-    </section>
+    <h2>What We Do</h2>
+    <p>
+      At Super Hyper Entertainment, we help small creators bring their projects to life. 
+      Whether it’s a video game, animation, or creative app, we provide the tools, community, and 
+      support to make it possible. Our goal is to empower creative minds and give them a place 
+      to shine without being overshadowed by massive studios.
+    </p>
 
-    <section id="projects">
-      <h2>Our Work</h2>
-      <p>
-        We support small projects by organizing competitions, publishing updates, and offering resources that 
-        help creators grow. Our tournaments provide recognition and even rewards for outstanding work, 
-        giving creators the motivation and visibility they deserve.
-      </p>
-      <p>
-        From experimental ideas to fully developed games, we believe every creation has value. 
-        Super Hyper Entertainment is here to amplify those voices, creating a hub of discovery 
-        for players and creators alike.
-      </p>
-    </section>
+    <h2>Our Mission</h2>
+    <p>
+      We believe that every idea deserves a chance. That’s why we focus on small-scale projects 
+      and independent creators. By offering resources, collaboration opportunities, and a 
+      supportive environment, we ensure that unique projects don’t just stay ideas—they become reality.
+    </p>
 
-    <section id="contact">
-      <h2>Contact Us</h2>
-      <div class="contact">
-        <p>Want to collaborate or showcase your project?</p>
-        <p>Email us at: <a href="mailto:superhyperentertainment@gmail.com">superhyperentertainment@gmail.com</a></p>
-        <p>Or reach out on our community Discord!</p>
-      </div>
-    </section>
+    <h2>Contact Us</h2>
+    <p>
+      Want to collaborate or join the community? Reach out via Discord or email. 
+      We’re always looking for passionate creators to be part of Super Hyper Entertainment.
+    </p>
   </main>
 
   <script>
-    function toggleMenu() {
-      document.getElementById("nav").classList.toggle("active");
+    function toggleSidebar() {
+      let sidebar = document.getElementById("mySidebar");
+      let overlay = document.getElementById("overlay");
+
+      if (sidebar.style.left === "0px") {
+        sidebar.style.left = "-250px";
+        overlay.style.width = "0";
+      } else {
+        sidebar.style.left = "0px";
+        overlay.style.width = "100%";
+      }
     }
   </script>
 </body>
