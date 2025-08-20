@@ -9,138 +9,220 @@
       font-family: Arial, sans-serif;
       margin: 0;
       padding: 0;
-      line-height: 1.6;
-      background: #f9f9f9;
+      background: #f0f4f8;
+      color: #333;
+      line-height: 1.8;
+      overflow-x: hidden;
     }
 
-    /* Header */
     header {
-      background: #222;
-      color: #fff;
-      padding: 1rem;
+      background: #1e1e2f;
+      color: white;
+      padding: 20px;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
     }
 
     header h1 {
       margin: 0;
-      font-size: 1.5rem;
+      font-size: 1.6em;
     }
 
     /* Hamburger */
     .hamburger {
-      font-size: 1.8rem;
+      font-size: 28px;
       cursor: pointer;
       display: block;
     }
 
-    /* Sidebar menu */
+    /* Sidebar */
     .sidebar {
       height: 100%;
-      width: 250px;
+      width: 0;
       position: fixed;
       top: 0;
-      left: -250px;
-      background: #333;
-      color: #fff;
+      right: 0;
+      background-color: #2b2b40;
       overflow-x: hidden;
-      transition: 0.3s;
+      transition: 0.4s;
       padding-top: 60px;
+      z-index: 1001;
     }
 
     .sidebar a {
-      padding: 10px 20px;
-      display: block;
+      padding: 12px 30px;
       text-decoration: none;
-      color: #fff;
+      font-size: 20px;
+      color: white;
+      display: block;
+      transition: 0.3s;
     }
 
     .sidebar a:hover {
-      background: #575757;
+      background: #414165;
     }
 
-    /* Content */
+    .sidebar .closebtn {
+      position: absolute;
+      top: 15px;
+      right: 20px;
+      font-size: 40px;
+    }
+
     main {
-      padding: 2rem;
-      max-width: 800px;
-      margin: auto;
-    }
-
-    h2 {
-      color: #222;
-      margin-top: 2rem;
-    }
-
-    p {
-      font-size: 1.2rem;
-      margin-bottom: 1.5rem;
-    }
-
-    /* Dark overlay when menu is open */
-    #overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 0;
-      height: 100%;
-      background: rgba(0,0,0,0.5);
-      transition: 0.3s;
+      padding: 50px 10%;
+      position: relative;
       z-index: 1;
+    }
+
+    section {
+      margin-bottom: 70px;
+    }
+
+    section h2 {
+      font-size: 2.2em;
+      margin-bottom: 15px;
+      color: #1e1e2f;
+    }
+
+    section p {
+      font-size: 1.3em;
+      max-width: 900px;
+    }
+
+    /* Contact link */
+    .contact a {
+      color: #1e90ff;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    .contact a:hover {
+      text-decoration: underline;
+    }
+
+    /* Background geometry */
+    .shape {
+      position: absolute;
+      border-radius: 50%;
+      opacity: 0.15;
+      z-index: 0;
+      animation: float 10s infinite ease-in-out;
+    }
+
+    .circle1 {
+      width: 250px;
+      height: 250px;
+      background: #ff6f61;
+      top: 150px;
+      left: -120px;
+    }
+
+    .circle2 {
+      width: 180px;
+      height: 180px;
+      background: #1e90ff;
+      bottom: 200px;
+      right: -90px;
+      animation-delay: 3s;
+    }
+
+    .circle3 {
+      width: 120px;
+      height: 120px;
+      background: #32cd32;
+      top: 600px;
+      right: 15%;
+      animation-delay: 5s;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-20px); }
+    }
+
+    footer {
+      background: #1e1e2f;
+      color: white;
+      text-align: center;
+      padding: 15px;
     }
   </style>
 </head>
 <body>
   <header>
     <h1>Super Hyper Entertainment</h1>
-    <span class="hamburger" onclick="toggleSidebar()">☰</span>
+    <span class="hamburger" onclick="openNav()">☰</span>
   </header>
 
   <!-- Sidebar -->
-  <div id="overlay" onclick="toggleSidebar()"></div>
   <div id="mySidebar" class="sidebar">
-    <a href="#">Home</a>
-    <a href="#">Projects</a>
-    <a href="#">Contact</a>
-    <a href="#">About</a>
+    <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
+    <a href="#about">About</a>
+    <a href="#projects">Projects</a>
+    <a href="#contact">Contact</a>
   </div>
 
-  <!-- Main content -->
   <main>
-    <h2>What We Do</h2>
-    <p>
-      At Super Hyper Entertainment, we help small creators bring their projects to life. 
-      Whether it’s a video game, animation, or creative app, we provide the tools, community, and 
-      support to make it possible. Our goal is to empower creative minds and give them a place 
-      to shine without being overshadowed by massive studios.
-    </p>
+    <!-- Floating shapes -->
+    <div class="shape circle1"></div>
+    <div class="shape circle2"></div>
+    <div class="shape circle3"></div>
 
-    <h2>Our Mission</h2>
-    <p>
-      We believe that every idea deserves a chance. That’s why we focus on small-scale projects 
-      and independent creators. By offering resources, collaboration opportunities, and a 
-      supportive environment, we ensure that unique projects don’t just stay ideas—they become reality.
-    </p>
+    <section id="about">
+      <h2>About Us</h2>
+      <p>
+        At Super Hyper Entertainment, we believe that even the smallest ideas can become extraordinary. 
+        Our mission is to help individuals and small teams bring their creative visions to life. 
+        Whether it’s an animation, a game, or an experimental project, we provide the resources, 
+        expertise, and support to turn your concepts into reality. 
+      </p>
+      <p>
+        We focus on empowering creators who may not have large budgets or big studios behind them. 
+        By giving them the tools and knowledge they need, we ensure their projects have the best chance 
+        to succeed. Our philosophy is simple: <strong>creativity should never be limited by scale</strong>. 
+      </p>
+    </section>
 
-    <h2>Contact Us</h2>
-    <p>
-      Want to collaborate or join the community? Reach out via Discord or email. 
-      We’re always looking for passionate creators to be part of Super Hyper Entertainment.
-    </p>
+    <section id="projects">
+      <h2>Our Projects</h2>
+      <p>
+        We’ve collaborated on a wide variety of projects, from indie video games to short animated series. 
+        Each one is a testament to the creativity and passion of the teams we’ve worked with. 
+        We don’t just focus on production—we care about storytelling, world-building, and giving audiences 
+        experiences that stick with them long after they’ve finished watching or playing. 
+      </p>
+      <p>
+        Every project is unique, and we take pride in tailoring our approach to match the specific 
+        vision and goals of the creators we partner with. 
+      </p>
+    </section>
+
+    <section id="contact" class="contact">
+      <h2>Contact Us</h2>
+      <p>
+        Want to collaborate, ask questions, or pitch your idea? Reach out to us at:  
+        <a href="mailto:superhyperentertainment@example.com">superhyperentertainment@example.com</a>
+      </p>
+      <p>
+        Clicking the email link will open your default mail app (like Gmail, Outlook, or Apple Mail).
+      </p>
+    </section>
   </main>
 
-  <script>
-    function toggleSidebar() {
-      let sidebar = document.getElementById("mySidebar");
-      let overlay = document.getElementById("overlay");
+  <footer>
+    <p>© 2025 Super Hyper Entertainment. All rights reserved.</p>
+  </footer>
 
-      if (sidebar.style.left === "0px") {
-        sidebar.style.left = "-250px";
-        overlay.style.width = "0";
-      } else {
-        sidebar.style.left = "0px";
-        overlay.style.width = "100%";
-      }
+  <script>
+    function openNav() {
+      document.getElementById("mySidebar").style.width = "250px";
+    }
+    function closeNav() {
+      document.getElementById("mySidebar").style.width = "0";
     }
   </script>
 </body>
