@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Classified Database Access</title>
 <style>
-  body { font-family: Arial, sans-serif; background: #111; color: #eee; text-align: center; padding: 50px; }
-  input, button { padding: 10px; margin: 5px; }
-  .hidden { display: none; }
+body { font-family: Arial; background: #111; color: #eee; text-align: center; padding: 50px; }
+input, button { padding: 10px; margin: 5px; }
+.hidden { display: none; }
 </style>
 </head>
 <body>
@@ -23,29 +23,44 @@
 <div id="dataDiv" class="hidden">
   <h2>Database</h2>
   <div id="infoList"></div>
+
   <h3>Add New Info</h3>
   <input type="text" id="newInfo" placeholder="New Classified Info"><br>
   <input type="text" id="adminKey" placeholder="Admin Key"><br>
   <button onclick="addInfo()">Add Info</button>
   <p id="addMsg"></p>
+
+  <h3>Remove Info</h3>
+  <input type="text" id="removeKey" placeholder="Key to Remove"><br>
+  <input type="text" id="removeAdminKey" placeholder="Admin Key"><br>
+  <button onclick="removeInfo()">Remove Info</button>
+  <p id="removeMsg"></p>
 </div>
 
 <script>
 const coreAdminKey = "ADM1N-R3D4CT";
-let database = [
-  {info: "Date of release for *REDACTED* is December 15th, 2026.", key: "XJ7-12D6"}
-];
+const githubUser = "YOUR_GITHUB_USERNAME"; // Replace with your GitHub username
+const repoName = "classified-database"; // Replace with your repo name
+const filePath = "database.json"; // Replace with your JSON file name
+const githubToken = "YOUR_PERSONAL_ACCESS_TOKEN"; // Generate a PAT with repo permissions
 
-function generateKey() {
-  return Math.random().toString(36).substring(2, 10).toUpperCase();
+let database = [];
+
+async function loadDatabase() {
+  const res = await fetch(`https://raw.githubusercontent.com/${githubUser}/${repoName}/main/${filePath}`);
+  database = await res.json();
 }
 
-function verifyAccess() {
+function generateKey() {
+  return Math.random().toString(36).substring(2,10).toUpperCase();
+}
+
+async function verifyAccess() {
+  await loadDatabase();
   const accessCode = document.getElementById("accessCode").value;
   const infoCode = document.getElementById("infoCode").value;
-  
   let found = database.find(entry => entry.key === infoCode);
-  if (accessCode === "R3D4CT3D-92XQ" && found) {
+  if(accessCode === "R3D4CT3D-92XQ" && found){
     document.getElementById("loginDiv").classList.add("hidden");
     document.getElementById("dataDiv").classList.remove("hidden");
     displayInfo();
@@ -62,21 +77,75 @@ function displayInfo() {
   });
 }
 
-function addInfo() {
+async function addInfo() {
   const newInfo = document.getElementById("newInfo").value;
   const adminKey = document.getElementById("adminKey").value;
-  
-  if (adminKey === coreAdminKey) {
-    const newKey = generateKey();
-    database.push({info: newInfo, key: newKey});
-    document.getElementById("addMsg").innerText = `Info added. Key: ${newKey}`;
-    displayInfo();
-    document.getElementById("newInfo").value = "";
-    document.getElementById("adminKey").value = "";
-  } else {
+  if(adminKey !== coreAdminKey) {
     document.getElementById("addMsg").innerText = "Invalid Admin Key!";
+    return;
   }
+
+  const newKey = generateKey();
+  database.push({info: newInfo, key: newKey});
+
+  const res = await fetch(`https://api.github.com/repos/${githubUser}/${repoName}/contents/${filePath}`);
+  const data = await res.json();
+  const sha = data.sha;
+
+  await fetch(`https://api.github.com/repos/${githubUser}/${repoName}/contents/${filePath}`, {
+    method: 'PUT',
+    headers: { "Authorization": `token ${githubToken}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      message: `Add new info key ${newKey}`,
+      content: btoa(JSON.stringify(database, null, 2)),
+      sha: sha
+    })
+  });
+
+  document.getElementById("addMsg").innerText = `Info added. Key: ${newKey}`;
+  displayInfo();
+  document.getElementById("newInfo").value = "";
+  document.getElementById("adminKey").value = "";
 }
+
+async function removeInfo() {
+  const keyToRemove = document.getElementById("removeKey").value;
+  const adminKey = document.getElementById("removeAdminKey").value;
+
+  if (adminKey !== coreAdminKey) {
+    document.getElementById("removeMsg").innerText = "Invalid Admin Key!";
+    return;
+  }
+
+  const index = database.findIndex(entry => entry.key === keyToRemove);
+  if (index === -1) {
+    document.getElementById("removeMsg").innerText = "Key not found!";
+    return;
+  }
+
+  database.splice(index, 1);
+
+  const res = await fetch(`https://api.github.com/repos/${githubUser}/${repoName}/contents/${filePath}`);
+  const data = await res.json();
+  const sha = data.sha;
+
+  await fetch(`https://api.github.com/repos/${githubUser}/${repoName}/contents/${filePath}`, {
+    method: 'PUT',
+    headers: { "Authorization": `token ${githubToken}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      message: `Remove info key ${keyToRemove}`,
+      content: btoa(JSON.stringify(database, null, 2)),
+      sha: sha
+    })
+  });
+
+  document.getElementById("removeMsg").innerText = `Info with key ${keyToRemove} removed.`;
+  displayInfo();
+  document.getElementById("removeKey").value = "";
+  document.getElementById("removeAdminKey").value = "";
+}
+
+loadDatabase();
 </script>
 </body>
 </html>
