@@ -50,6 +50,7 @@ body {
 #leftPanel {
   width: 35%;
   border-right: 2px solid #00ff00;
+  display: none; /* hidden until login */
 }
 #rightPanel {
   width: 65%;
@@ -67,12 +68,11 @@ input, button, textarea {
   width: 100%;
   box-sizing: border-box;
 }
-button {
-  cursor: pointer;
-}
+button { cursor: pointer; }
 textarea {height: 60px;}
 h2,h3 {margin: 10px 0;}
 #output {white-space: pre-wrap;}
+#loginBox {width: 300px;}
 </style>
 </head>
 <body>
@@ -93,6 +93,13 @@ h2,h3 {margin: 10px 0;}
   </div>
 
   <div id="rightPanel">
+    <div id="loginBox">
+      <h2>Login</h2>
+      <input type="text" id="usernameInput" placeholder="Username">
+      <input type="password" id="passwordInput" placeholder="Password">
+      <button onclick="login()">Login</button>
+      <p id="loginMsg"></p>
+    </div>
     <div id="output"></div>
   </div>
   <div id="static"></div>
@@ -104,10 +111,14 @@ const masterCode = "WARGAMES";
 const githubUser = "YOUR_GITHUB_USERNAME";
 const repoName = "classified-database";
 const filePath = "database.json";
-const githubToken = "YOUR_PERSONAL_ACCESS_TOKEN"; // GitHub PAT with repo permissions
+const githubToken = "YOUR_PERSONAL_ACCESS_TOKEN";
 
 let database = [];
 const output = document.getElementById("output");
+
+// Login accounts
+const accounts = { "NP_ZHT": "ACCESSCODE-29XQ" };
+let loggedInUser = null;
 
 function typeLine(line, delay=30){
   return new Promise(resolve=>{
@@ -137,40 +148,32 @@ function generateKey(){
   return Math.random().toString(36).substring(2,10).toUpperCase();
 }
 
-async function startTerminal(){
-  await typeLine("ENTER ACCESS CODE:");
-  const accessCode = prompt("Enter access code:");
-  if(accessCode === masterCode){
-    await typeLine("MASTER ACCESS GRANTED.");
-    showDatabaseUI();
-    return;
-  }
+async function login(){
+  const user = document.getElementById("usernameInput").value;
+  const pass = document.getElementById("passwordInput").value;
 
-  await loadDatabase();
-  await typeLine("ENTER INFO KEY:");
-  const infoKey = prompt("Enter info key:");
-  let found = database.find(entry => entry.key === infoKey);
-  if(accessCode === "R3D4CT3D-92XQ" && found){
-    await typeLine("ACCESS GRANTED.");
-    showDatabaseUI();
+  if(accounts[user] && accounts[user] === pass){
+    loggedInUser = user;
+    document.getElementById("loginMsg").innerText = "";
+    document.getElementById("loginBox").style.display="none";
+    document.getElementById("leftPanel").style.display="block";
+    await typeLine(`Welcome, Patrick`); // static welcome message
+    await loadDatabase();
+    displayInfo();
   } else {
-    await typeLine("ACCESS DENIED.");
+    document.getElementById("loginMsg").innerText = "Invalid username or password!";
   }
-}
-
-function showDatabaseUI(){
-  displayInfo();
 }
 
 function displayInfo(){
-  const infoList = output;
-  infoList.innerHTML = "";
+  output.innerHTML = "";
   database.forEach(entry=>{
     typeLine(`Key: ${entry.key} | Info: ${entry.info}`, 15);
   });
 }
 
 async function addInfo(){
+  if(!loggedInUser){document.getElementById("addMsg").innerText="Login required!"; return;}
   const newInfo = document.getElementById("newInfo").value;
   const adminKey = document.getElementById("adminKey").value;
   if(adminKey !== coreAdminKey){
@@ -197,6 +200,7 @@ async function addInfo(){
 }
 
 async function removeInfo(){
+  if(!loggedInUser){document.getElementById("removeMsg").innerText="Login required!"; return;}
   const keyToRemove = document.getElementById("removeKey").value;
   const adminKey = document.getElementById("removeAdminKey").value;
   if(adminKey !== coreAdminKey){
@@ -225,8 +229,6 @@ async function removeInfo(){
   document.getElementById("removeKey").value="";
   document.getElementById("removeAdminKey").value="";
 }
-
-startTerminal();
 </script>
 </body>
 </html>
