@@ -3,46 +3,48 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Classified Database Access</title>
+<title>Classified Access Terminal</title>
 <style>
-body { font-family: Arial; background: #111; color: #eee; text-align: center; padding: 50px; }
-input, button { padding: 10px; margin: 5px; }
+body { font-family: 'Courier New', monospace; background: #000; color: #0f0; text-align: center; padding: 50px; }
+input, button { padding: 10px; margin: 5px; background: #111; color: #0f0; border: 1px solid #0f0; }
+button:hover { background: #0f0; color: #000; cursor: pointer; }
 .hidden { display: none; }
+#infoList p { border-bottom: 1px solid #0f0; padding: 5px; }
 </style>
 </head>
 <body>
-<h1>Classified Database Access</h1>
+<h1>ACCESS TERMINAL</h1>
 
 <div id="loginDiv">
-  <input type="text" id="accessCode" placeholder="Access Code"><br>
-  <input type="text" id="infoCode" placeholder="Info Code"><br>
-  <button onclick="verifyAccess()">Enter</button>
+  <input type="text" id="accessCode" placeholder="ACCESS CODE"><br>
+  <input type="text" id="infoCode" placeholder="DATA KEY"><br>
+  <button onclick="verifyAccess()">ENTER</button>
   <p id="loginMsg"></p>
 </div>
 
 <div id="dataDiv" class="hidden">
-  <h2>Database</h2>
+  <h2>CLASSIFIED DATABASE</h2>
   <div id="infoList"></div>
 
-  <h3>Add New Info</h3>
-  <input type="text" id="newInfo" placeholder="New Classified Info"><br>
-  <input type="text" id="adminKey" placeholder="Admin Key"><br>
-  <button onclick="addInfo()">Add Info</button>
+  <h3>ADD NEW ENTRY</h3>
+  <input type="text" id="newInfo" placeholder="CLASSIFIED DATA"><br>
+  <input type="text" id="adminKey" placeholder="ADMIN KEY"><br>
+  <button onclick="addInfo()">ADD ENTRY</button>
   <p id="addMsg"></p>
 
-  <h3>Remove Info</h3>
-  <input type="text" id="removeKey" placeholder="Key to Remove"><br>
-  <input type="text" id="removeAdminKey" placeholder="Admin Key"><br>
-  <button onclick="removeInfo()">Remove Info</button>
+  <h3>REMOVE ENTRY</h3>
+  <input type="text" id="removeKey" placeholder="KEY TO REMOVE"><br>
+  <input type="text" id="removeAdminKey" placeholder="ADMIN KEY"><br>
+  <button onclick="removeInfo()">REMOVE ENTRY</button>
   <p id="removeMsg"></p>
 </div>
 
 <script>
 const coreAdminKey = "ADM1N-R3D4CT";
-const githubUser = "YOUR_GITHUB_USERNAME"; // Replace with your GitHub username
-const repoName = "classified-database"; // Replace with your repo name
-const filePath = "database.json"; // Replace with your JSON file name
-const githubToken = "YOUR_PERSONAL_ACCESS_TOKEN"; // Generate a PAT with repo permissions
+const githubUser = "YOUR_GITHUB_USERNAME"; // REDACTED
+const repoName = "classified-database"; // REDACTED
+const filePath = "database.json"; // REDACTED
+const githubToken = "YOUR_PERSONAL_ACCESS_TOKEN"; // REDACTED
 
 let database = [];
 
@@ -65,7 +67,7 @@ async function verifyAccess() {
     document.getElementById("dataDiv").classList.remove("hidden");
     displayInfo();
   } else {
-    document.getElementById("loginMsg").innerText = "Access Denied!";
+    document.getElementById("loginMsg").innerText = "ACCESS DENIED";
   }
 }
 
@@ -73,7 +75,7 @@ function displayInfo() {
   const infoList = document.getElementById("infoList");
   infoList.innerHTML = "";
   database.forEach(entry => {
-    infoList.innerHTML += `<p>Key: ${entry.key} | Info: ${entry.info}</p>`;
+    infoList.innerHTML += `<p>DATA KEY: ${entry.key} | DATA: ${entry.info}</p>`;
   });
 }
 
@@ -81,7 +83,7 @@ async function addInfo() {
   const newInfo = document.getElementById("newInfo").value;
   const adminKey = document.getElementById("adminKey").value;
   if(adminKey !== coreAdminKey) {
-    document.getElementById("addMsg").innerText = "Invalid Admin Key!";
+    document.getElementById("addMsg").innerText = "INVALID ADMIN KEY";
     return;
   }
 
@@ -96,13 +98,13 @@ async function addInfo() {
     method: 'PUT',
     headers: { "Authorization": `token ${githubToken}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      message: `Add new info key ${newKey}`,
+      message: `Add new data key ${newKey}`,
       content: btoa(JSON.stringify(database, null, 2)),
       sha: sha
     })
   });
 
-  document.getElementById("addMsg").innerText = `Info added. Key: ${newKey}`;
+  document.getElementById("addMsg").innerText = `ENTRY ADDED | KEY: ${newKey}`;
   displayInfo();
   document.getElementById("newInfo").value = "";
   document.getElementById("adminKey").value = "";
@@ -113,13 +115,13 @@ async function removeInfo() {
   const adminKey = document.getElementById("removeAdminKey").value;
 
   if (adminKey !== coreAdminKey) {
-    document.getElementById("removeMsg").innerText = "Invalid Admin Key!";
+    document.getElementById("removeMsg").innerText = "INVALID ADMIN KEY";
     return;
   }
 
   const index = database.findIndex(entry => entry.key === keyToRemove);
   if (index === -1) {
-    document.getElementById("removeMsg").innerText = "Key not found!";
+    document.getElementById("removeMsg").innerText = "KEY NOT FOUND";
     return;
   }
 
@@ -133,13 +135,13 @@ async function removeInfo() {
     method: 'PUT',
     headers: { "Authorization": `token ${githubToken}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      message: `Remove info key ${keyToRemove}`,
+      message: `Remove data key ${keyToRemove}`,
       content: btoa(JSON.stringify(database, null, 2)),
       sha: sha
     })
   });
 
-  document.getElementById("removeMsg").innerText = `Info with key ${keyToRemove} removed.`;
+  document.getElementById("removeMsg").innerText = `ENTRY REMOVED | KEY: ${keyToRemove}`;
   displayInfo();
   document.getElementById("removeKey").value = "";
   document.getElementById("removeAdminKey").value = "";
