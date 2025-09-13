@@ -3,92 +3,81 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CLASSIFIED TERMINAL</title>
+<title>Classified Database Access</title>
 <style>
-body { font-family: 'Courier New', monospace; background: #000; color: #0f0; text-align: center; padding: 50px; }
-input, button { padding: 10px; margin: 5px; background: #111; color: #0f0; border: 1px solid #0f0; }
-button:hover { background: #0f0; color: #000; cursor: pointer; }
+body { font-family: Arial; background: #111; color: #eee; text-align: center; padding: 50px; }
+input, button { padding: 10px; margin: 5px; }
 .hidden { display: none; }
-#infoList p { border-bottom: 1px solid #0f0; padding: 5px; }
-.terminalText { text-align: left; margin: 10px auto; max-width: 600px; background: #000; border: 1px solid #0f0; padding: 10px; min-height: 100px; }
 </style>
 </head>
 <body>
-<h1>CLASSIFIED ACCESS TERMINAL</h1>
+<h1>Classified Database Access</h1>
 
 <div id="loginDiv">
-  <input type="text" id="accessCode" placeholder="ACCESS CODE"><br>
-  <input type="text" id="infoCode" placeholder="DATA KEY"><br>
-  <button onclick="verifyAccess()">ENTER</button>
-  <div id="loginMsg" class="terminalText"></div>
+  <input type="text" id="accessCode" placeholder="Access Code"><br>
+  <input type="text" id="infoCode" placeholder="Info Code"><br>
+  <button onclick="verifyAccess()">Enter</button>
+  <p id="loginMsg"></p>
 </div>
 
 <div id="dataDiv" class="hidden">
-  <h2>CLASSIFIED DATABASE</h2>
-  <div id="infoList" class="terminalText"></div>
+  <h2>Database</h2>
+  <div id="infoList"></div>
 
-  <h3>ADD NEW ENTRY</h3>
-  <input type="text" id="newInfo" placeholder="CLASSIFIED DATA"><br>
-  <input type="text" id="adminKey" placeholder="ADMIN KEY"><br>
-  <button onclick="addInfo()">ADD ENTRY</button>
-  <p id="addMsg" class="terminalText"></p>
+  <h3>Add New Info</h3>
+  <input type="text" id="newInfo" placeholder="New Classified Info"><br>
+  <input type="text" id="adminKey" placeholder="Admin Key"><br>
+  <button onclick="addInfo()">Add Info</button>
+  <p id="addMsg"></p>
 
-  <h3>REMOVE ENTRY</h3>
-  <input type="text" id="removeKey" placeholder="KEY TO REMOVE"><br>
-  <input type="text" id="removeAdminKey" placeholder="ADMIN KEY"><br>
-  <button onclick="removeInfo()">REMOVE ENTRY</button>
-  <p id="removeMsg" class="terminalText"></p>
+  <h3>Remove Info</h3>
+  <input type="text" id="removeKey" placeholder="Key to Remove"><br>
+  <input type="text" id="removeAdminKey" placeholder="Admin Key"><br>
+  <button onclick="removeInfo()">Remove Info</button>
+  <p id="removeMsg"></p>
 </div>
 
 <script>
 const coreAdminKey = "ADM1N-R3D4CT";
-const githubUser = "YOUR_GITHUB_USERNAME"; // REDACTED
-const repoName = "classified-database"; // REDACTED
-const filePath = "database.json"; // REDACTED
-const githubToken = "YOUR_PERSONAL_ACCESS_TOKEN"; // REDACTED
+const githubUser = "YOUR_GITHUB_USERNAME";
+const repoName = "classified-database";
+const filePath = "database.json";
+const githubToken = "YOUR_PERSONAL_ACCESS_TOKEN"; // Generate PAT with repo permissions
 
 let database = [];
 
+// Load database from GitHub
 async function loadDatabase() {
-  try {
-    const res = await fetch(`https://raw.githubusercontent.com/${githubUser}/${repoName}/main/${filePath}`);
-    database = await res.json();
-  } catch (e) {
-    console.error("Failed to load database", e);
-    database = [];
-  }
+  const res = await fetch(`https://raw.githubusercontent.com/${githubUser}/${repoName}/main/${filePath}`);
+  database = await res.json();
 }
 
 function generateKey() {
   return Math.random().toString(36).substring(2,10).toUpperCase();
 }
 
-function typeText(element, text, delay = 30) {
-  element.innerHTML = "";
-  let i = 0;
-  const interval = setInterval(() => {
-    element.innerHTML += text[i];
-    i++;
-    if (i >= text.length) clearInterval(interval);
-  }, delay);
-}
-
+// Verify access including master bypass code
 async function verifyAccess() {
   await loadDatabase();
   const accessCode = document.getElementById("accessCode").value;
   const infoCode = document.getElementById("infoCode").value;
-  const found = database.find(entry => entry.key === infoCode);
 
-  const loginMsg = document.getElementById("loginMsg");
+  // Master bypass code
+  if (accessCode === "WARGAMES") {
+    document.getElementById("loginDiv").classList.add("hidden");
+    document.getElementById("dataDiv").classList.remove("hidden");
+    displayInfo();
+    return;
+  }
+
+  // Regular access check
+  let found = database.find(entry => entry.key === infoCode);
   if(accessCode === "R3D4CT3D-92XQ" && found){
-    typeText(loginMsg, "ACCESS GRANTED. LOADING DATABASE...");
-    setTimeout(() => {
-      document.getElementById("loginDiv").classList.add("hidden");
-      document.getElementById("dataDiv").classList.remove("hidden");
-      displayInfo();
-    }, 1000);
+    document.getElementById("loginDiv").classList.add("hidden");
+    document.getElementById("dataDiv").classList.remove("hidden");
+    displayInfo();
   } else {
-    typeText(loginMsg, "ACCESS DENIED. INVALID CODE.");
+    document.getElementById("loginMsg").innerText = "Access Denied!";
   }
 }
 
@@ -96,38 +85,39 @@ function displayInfo() {
   const infoList = document.getElementById("infoList");
   infoList.innerHTML = "";
   database.forEach(entry => {
-    infoList.innerHTML += `<p>DATA KEY: ${entry.key} | DATA: ${entry.info}</p>`;
+    infoList.innerHTML += `<p>Key: ${entry.key} | Info: ${entry.info}</p>`;
   });
 }
 
 async function addInfo() {
   const newInfo = document.getElementById("newInfo").value;
   const adminKey = document.getElementById("adminKey").value;
-  const addMsg = document.getElementById("addMsg");
 
   if(adminKey !== coreAdminKey) {
-    typeText(addMsg, "INVALID ADMIN KEY");
+    document.getElementById("addMsg").innerText = "Invalid Admin Key!";
     return;
   }
 
   const newKey = generateKey();
   database.push({info: newInfo, key: newKey});
 
+  // Get current file SHA for update
   const res = await fetch(`https://api.github.com/repos/${githubUser}/${repoName}/contents/${filePath}`);
   const data = await res.json();
   const sha = data.sha;
 
+  // Update file
   await fetch(`https://api.github.com/repos/${githubUser}/${repoName}/contents/${filePath}`, {
     method: 'PUT',
     headers: { "Authorization": `token ${githubToken}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      message: `Add new data key ${newKey}`,
+      message: `Add new info key ${newKey}`,
       content: btoa(JSON.stringify(database, null, 2)),
       sha: sha
     })
   });
 
-  typeText(addMsg, `ENTRY ADDED | KEY: ${newKey}`);
+  document.getElementById("addMsg").innerText = `Info added. Key: ${newKey}`;
   displayInfo();
   document.getElementById("newInfo").value = "";
   document.getElementById("adminKey").value = "";
@@ -136,41 +126,43 @@ async function addInfo() {
 async function removeInfo() {
   const keyToRemove = document.getElementById("removeKey").value;
   const adminKey = document.getElementById("removeAdminKey").value;
-  const removeMsg = document.getElementById("removeMsg");
 
-  if(adminKey !== coreAdminKey) {
-    typeText(removeMsg, "INVALID ADMIN KEY");
+  if (adminKey !== coreAdminKey) {
+    document.getElementById("removeMsg").innerText = "Invalid Admin Key!";
     return;
   }
 
   const index = database.findIndex(entry => entry.key === keyToRemove);
-  if(index === -1) {
-    typeText(removeMsg, "KEY NOT FOUND");
+  if (index === -1) {
+    document.getElementById("removeMsg").innerText = "Key not found!";
     return;
   }
 
   database.splice(index, 1);
 
+  // Get current file SHA for update
   const res = await fetch(`https://api.github.com/repos/${githubUser}/${repoName}/contents/${filePath}`);
   const data = await res.json();
   const sha = data.sha;
 
+  // Update file
   await fetch(`https://api.github.com/repos/${githubUser}/${repoName}/contents/${filePath}`, {
     method: 'PUT',
     headers: { "Authorization": `token ${githubToken}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      message: `Remove data key ${keyToRemove}`,
+      message: `Remove info key ${keyToRemove}`,
       content: btoa(JSON.stringify(database, null, 2)),
       sha: sha
     })
   });
 
-  typeText(removeMsg, `ENTRY REMOVED | KEY: ${keyToRemove}`);
+  document.getElementById("removeMsg").innerText = `Info with key ${keyToRemove} removed.`;
   displayInfo();
   document.getElementById("removeKey").value = "";
   document.getElementById("removeAdminKey").value = "";
 }
 
+// Initial load
 loadDatabase();
 </script>
 </body>
