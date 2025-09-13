@@ -73,6 +73,7 @@ textarea {height: 60px;}
 h2,h3 {margin: 10px 0;}
 #output {white-space: pre-wrap;}
 #loginBox {width: 300px;}
+#welcomeMsg {font-size: 28px; font-weight:bold; margin-bottom:10px;}
 </style>
 </head>
 <body>
@@ -80,7 +81,8 @@ h2,h3 {margin: 10px 0;}
 <div id="terminal">
   <div id="leftPanel">
     <h2>Add New Info</h2>
-    <textarea id="newInfo" placeholder="New Classified Info"></textarea>
+    <p>⚠️ Add directly in the code now.</p>
+    <textarea id="newInfo" placeholder="New Classified Info (editing in code now)"></textarea>
     <input type="text" id="adminKey" placeholder="Admin Key">
     <button onclick="addInfo()">Add Info</button>
     <p id="addMsg"></p>
@@ -100,6 +102,7 @@ h2,h3 {margin: 10px 0;}
       <button onclick="login()">Login</button>
       <p id="loginMsg"></p>
     </div>
+    <div id="welcomeMsg"></div>
     <div id="output"></div>
   </div>
   <div id="static"></div>
@@ -108,17 +111,20 @@ h2,h3 {margin: 10px 0;}
 <script>
 const coreAdminKey = "ADM1N-R3D4CT";
 const masterCode = "WARGAMES";
-const githubUser = "YOUR_GITHUB_USERNAME";
-const repoName = "classified-database";
-const filePath = "database.json";
-const githubToken = "YOUR_PERSONAL_ACCESS_TOKEN";
 
-let database = [];
-const output = document.getElementById("output");
+// Database now editable directly in code
+let database = [
+  {key: "XJ7-12D6", info: "Sample classified information."}
+];
 
-// Login accounts
-const accounts = { "NP_ZHT": "ACCESSCODE-29XQ" };
+const accounts = { 
+  "NP_ZHT": {password:"ACCESSCODE-29XQ", display:"Welcome, Patrick"},
+  "ELM_QWE": {password:"ACCESSCODE-67CW", display:"Welcome, Parker"}
+};
+
 let loggedInUser = null;
+const output = document.getElementById("output");
+const welcomeDiv = document.getElementById("welcomeMsg");
 
 function typeLine(line, delay=30){
   return new Promise(resolve=>{
@@ -135,36 +141,6 @@ function typeLine(line, delay=30){
   });
 }
 
-async function loadDatabase(){
-  try{
-    const res = await fetch(`https://raw.githubusercontent.com/${githubUser}/${repoName}/main/${filePath}`);
-    database = await res.json();
-  } catch(err){
-    await typeLine("ERROR LOADING DATABASE FROM GITHUB.");
-  }
-}
-
-function generateKey(){
-  return Math.random().toString(36).substring(2,10).toUpperCase();
-}
-
-async function login(){
-  const user = document.getElementById("usernameInput").value;
-  const pass = document.getElementById("passwordInput").value;
-
-  if(accounts[user] && accounts[user] === pass){
-    loggedInUser = user;
-    document.getElementById("loginMsg").innerText = "";
-    document.getElementById("loginBox").style.display="none";
-    document.getElementById("leftPanel").style.display="block";
-    await typeLine(`Welcome, Patrick`); // static welcome message
-    await loadDatabase();
-    displayInfo();
-  } else {
-    document.getElementById("loginMsg").innerText = "Invalid username or password!";
-  }
-}
-
 function displayInfo(){
   output.innerHTML = "";
   database.forEach(entry=>{
@@ -172,7 +148,25 @@ function displayInfo(){
   });
 }
 
-async function addInfo(){
+function login(){
+  const user = document.getElementById("usernameInput").value;
+  const pass = document.getElementById("passwordInput").value;
+  if(accounts[user] && accounts[user].password === pass){
+    loggedInUser = user;
+    welcomeDiv.innerText = accounts[user].display;
+    document.getElementById("loginBox").style.display="none";
+    document.getElementById("leftPanel").style.display="block";
+    displayInfo();
+  } else {
+    document.getElementById("loginMsg").innerText = "Invalid username or password!";
+  }
+}
+
+function generateKey(){
+  return Math.random().toString(36).substring(2,10).toUpperCase();
+}
+
+function addInfo(){
   if(!loggedInUser){document.getElementById("addMsg").innerText="Login required!"; return;}
   const newInfo = document.getElementById("newInfo").value;
   const adminKey = document.getElementById("adminKey").value;
@@ -182,53 +176,4 @@ async function addInfo(){
   }
   const newKey = generateKey();
   database.push({info:newInfo,key:newKey});
-
-  const res = await fetch(`https://api.github.com/repos/${githubUser}/${repoName}/contents/${filePath}`);
-  const data = await res.json();
-  const sha = data.sha;
-
-  await fetch(`https://api.github.com/repos/${githubUser}/${repoName}/contents/${filePath}`,{
-    method:'PUT',
-    headers: {"Authorization":`token ${githubToken}`,"Content-Type":"application/json"},
-    body: JSON.stringify({message:`Add new info key ${newKey}`,content:btoa(JSON.stringify(database,null,2)),sha:sha})
-  });
-
-  document.getElementById("addMsg").innerText = `Info added. Key: ${newKey}`;
-  displayInfo();
-  document.getElementById("newInfo").value="";
-  document.getElementById("adminKey").value="";
-}
-
-async function removeInfo(){
-  if(!loggedInUser){document.getElementById("removeMsg").innerText="Login required!"; return;}
-  const keyToRemove = document.getElementById("removeKey").value;
-  const adminKey = document.getElementById("removeAdminKey").value;
-  if(adminKey !== coreAdminKey){
-    document.getElementById("removeMsg").innerText="Invalid Admin Key!";
-    return;
-  }
-  const index = database.findIndex(entry=>entry.key===keyToRemove);
-  if(index===-1){
-    document.getElementById("removeMsg").innerText="Key not found!";
-    return;
-  }
-  database.splice(index,1);
-
-  const res = await fetch(`https://api.github.com/repos/${githubUser}/${repoName}/contents/${filePath}`);
-  const data = await res.json();
-  const sha = data.sha;
-
-  await fetch(`https://api.github.com/repos/${githubUser}/${repoName}/contents/${filePath}`,{
-    method:'PUT',
-    headers: {"Authorization":`token ${githubToken}`,"Content-Type":"application/json"},
-    body: JSON.stringify({message:`Remove info key ${keyToRemove}`,content:btoa(JSON.stringify(database,null,2)),sha:sha})
-  });
-
-  document.getElementById("removeMsg").innerText = `Info with key ${keyToRemove} removed.`;
-  displayInfo();
-  document.getElementById("removeKey").value="";
-  document.getElementById("removeAdminKey").value="";
-}
-</script>
-</body>
-</html>
+  document.getElementById("addMsg").innerText = `Info added
