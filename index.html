@@ -3,40 +3,41 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Classified Access Terminal</title>
+<title>CLASSIFIED TERMINAL</title>
 <style>
 body { font-family: 'Courier New', monospace; background: #000; color: #0f0; text-align: center; padding: 50px; }
 input, button { padding: 10px; margin: 5px; background: #111; color: #0f0; border: 1px solid #0f0; }
 button:hover { background: #0f0; color: #000; cursor: pointer; }
 .hidden { display: none; }
 #infoList p { border-bottom: 1px solid #0f0; padding: 5px; }
+.terminalText { text-align: left; margin: 10px auto; max-width: 600px; background: #000; border: 1px solid #0f0; padding: 10px; min-height: 100px; }
 </style>
 </head>
 <body>
-<h1>ACCESS TERMINAL</h1>
+<h1>CLASSIFIED ACCESS TERMINAL</h1>
 
 <div id="loginDiv">
   <input type="text" id="accessCode" placeholder="ACCESS CODE"><br>
   <input type="text" id="infoCode" placeholder="DATA KEY"><br>
   <button onclick="verifyAccess()">ENTER</button>
-  <p id="loginMsg"></p>
+  <div id="loginMsg" class="terminalText"></div>
 </div>
 
 <div id="dataDiv" class="hidden">
   <h2>CLASSIFIED DATABASE</h2>
-  <div id="infoList"></div>
+  <div id="infoList" class="terminalText"></div>
 
   <h3>ADD NEW ENTRY</h3>
   <input type="text" id="newInfo" placeholder="CLASSIFIED DATA"><br>
   <input type="text" id="adminKey" placeholder="ADMIN KEY"><br>
   <button onclick="addInfo()">ADD ENTRY</button>
-  <p id="addMsg"></p>
+  <p id="addMsg" class="terminalText"></p>
 
   <h3>REMOVE ENTRY</h3>
   <input type="text" id="removeKey" placeholder="KEY TO REMOVE"><br>
   <input type="text" id="removeAdminKey" placeholder="ADMIN KEY"><br>
   <button onclick="removeInfo()">REMOVE ENTRY</button>
-  <p id="removeMsg"></p>
+  <p id="removeMsg" class="terminalText"></p>
 </div>
 
 <script>
@@ -49,25 +50,45 @@ const githubToken = "YOUR_PERSONAL_ACCESS_TOKEN"; // REDACTED
 let database = [];
 
 async function loadDatabase() {
-  const res = await fetch(`https://raw.githubusercontent.com/${githubUser}/${repoName}/main/${filePath}`);
-  database = await res.json();
+  try {
+    const res = await fetch(`https://raw.githubusercontent.com/${githubUser}/${repoName}/main/${filePath}`);
+    database = await res.json();
+  } catch (e) {
+    console.error("Failed to load database", e);
+    database = [];
+  }
 }
 
 function generateKey() {
   return Math.random().toString(36).substring(2,10).toUpperCase();
 }
 
+function typeText(element, text, delay = 30) {
+  element.innerHTML = "";
+  let i = 0;
+  const interval = setInterval(() => {
+    element.innerHTML += text[i];
+    i++;
+    if (i >= text.length) clearInterval(interval);
+  }, delay);
+}
+
 async function verifyAccess() {
   await loadDatabase();
   const accessCode = document.getElementById("accessCode").value;
   const infoCode = document.getElementById("infoCode").value;
-  let found = database.find(entry => entry.key === infoCode);
+  const found = database.find(entry => entry.key === infoCode);
+
+  const loginMsg = document.getElementById("loginMsg");
   if(accessCode === "R3D4CT3D-92XQ" && found){
-    document.getElementById("loginDiv").classList.add("hidden");
-    document.getElementById("dataDiv").classList.remove("hidden");
-    displayInfo();
+    typeText(loginMsg, "ACCESS GRANTED. LOADING DATABASE...");
+    setTimeout(() => {
+      document.getElementById("loginDiv").classList.add("hidden");
+      document.getElementById("dataDiv").classList.remove("hidden");
+      displayInfo();
+    }, 1000);
   } else {
-    document.getElementById("loginMsg").innerText = "ACCESS DENIED";
+    typeText(loginMsg, "ACCESS DENIED. INVALID CODE.");
   }
 }
 
@@ -82,8 +103,10 @@ function displayInfo() {
 async function addInfo() {
   const newInfo = document.getElementById("newInfo").value;
   const adminKey = document.getElementById("adminKey").value;
+  const addMsg = document.getElementById("addMsg");
+
   if(adminKey !== coreAdminKey) {
-    document.getElementById("addMsg").innerText = "INVALID ADMIN KEY";
+    typeText(addMsg, "INVALID ADMIN KEY");
     return;
   }
 
@@ -104,7 +127,7 @@ async function addInfo() {
     })
   });
 
-  document.getElementById("addMsg").innerText = `ENTRY ADDED | KEY: ${newKey}`;
+  typeText(addMsg, `ENTRY ADDED | KEY: ${newKey}`);
   displayInfo();
   document.getElementById("newInfo").value = "";
   document.getElementById("adminKey").value = "";
@@ -113,15 +136,16 @@ async function addInfo() {
 async function removeInfo() {
   const keyToRemove = document.getElementById("removeKey").value;
   const adminKey = document.getElementById("removeAdminKey").value;
+  const removeMsg = document.getElementById("removeMsg");
 
-  if (adminKey !== coreAdminKey) {
-    document.getElementById("removeMsg").innerText = "INVALID ADMIN KEY";
+  if(adminKey !== coreAdminKey) {
+    typeText(removeMsg, "INVALID ADMIN KEY");
     return;
   }
 
   const index = database.findIndex(entry => entry.key === keyToRemove);
-  if (index === -1) {
-    document.getElementById("removeMsg").innerText = "KEY NOT FOUND";
+  if(index === -1) {
+    typeText(removeMsg, "KEY NOT FOUND");
     return;
   }
 
@@ -141,7 +165,7 @@ async function removeInfo() {
     })
   });
 
-  document.getElementById("removeMsg").innerText = `ENTRY REMOVED | KEY: ${keyToRemove}`;
+  typeText(removeMsg, `ENTRY REMOVED | KEY: ${keyToRemove}`);
   displayInfo();
   document.getElementById("removeKey").value = "";
   document.getElementById("removeAdminKey").value = "";
