@@ -117,6 +117,7 @@ let database = [
   {key: "XJ7-12D6", info: "Sample classified information."}
 ];
 
+// Accounts with display messages
 const accounts = { 
   "NP_ZHT": {password:"ACCESSCODE-29XQ", display:"Welcome, Patrick"},
   "ELM_QWE": {password:"ACCESSCODE-67CW", display:"Welcome, Parker"}
@@ -148,9 +149,10 @@ function displayInfo(){
   });
 }
 
+// FIXED login to trim spaces
 function login(){
-  const user = document.getElementById("usernameInput").value;
-  const pass = document.getElementById("passwordInput").value;
+  const user = document.getElementById("usernameInput").value.trim();
+  const pass = document.getElementById("passwordInput").value.trim();
   if(accounts[user] && accounts[user].password === pass){
     loggedInUser = user;
     welcomeDiv.innerText = accounts[user].display;
@@ -176,4 +178,31 @@ function addInfo(){
   }
   const newKey = generateKey();
   database.push({info:newInfo,key:newKey});
-  document.getElementById("addMsg").innerText = `Info added
+  document.getElementById("addMsg").innerText = `Info added. Key: ${newKey}`;
+  displayInfo();
+  document.getElementById("newInfo").value="";
+  document.getElementById("adminKey").value="";
+}
+
+function removeInfo(){
+  if(!loggedInUser){document.getElementById("removeMsg").innerText="Login required!"; return;}
+  const keyToRemove = document.getElementById("removeKey").value;
+  const adminKey = document.getElementById("removeAdminKey").value;
+  if(adminKey !== coreAdminKey){
+    document.getElementById("removeMsg").innerText="Invalid Admin Key!";
+    return;
+  }
+  const index = database.findIndex(entry=>entry.key===keyToRemove);
+  if(index===-1){
+    document.getElementById("removeMsg").innerText="Key not found!";
+    return;
+  }
+  database.splice(index,1);
+  document.getElementById("removeMsg").innerText = `Info with key ${keyToRemove} removed.`;
+  displayInfo();
+  document.getElementById("removeKey").value="";
+  document.getElementById("removeAdminKey").value="";
+}
+</script>
+</body>
+</html>
