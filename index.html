@@ -6,20 +6,18 @@
 <title>Classified Database Terminal</title>
 <style>
 body {
+  margin:0;
   background: black;
   color: #00ff00;
   font-family: "Courier New", monospace;
   overflow: hidden;
-  padding: 20px;
 }
 #terminal {
-  width: 90%;
-  max-width: 800px;
-  margin: auto;
-  padding: 20px;
-  border: 2px solid #00ff00;
-  transform: scale(1, 1.02) skewY(-0.5deg);
   position: relative;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  transform: scale(1,1.02) skewY(-0.5deg);
 }
 #static {
   pointer-events: none;
@@ -32,45 +30,72 @@ body {
     transparent 1px 2px
   );
   animation: staticAnim 0.05s infinite;
+  z-index: 1000;
 }
-@keyframes staticAnim {
-  0% {background-position: 0 0;}
-  100% {background-position: 0 100%;}
-}
+@keyframes staticAnim {0%{background-position:0 0}100%{background-position:0 100%}}
 .cursor {
-  display: inline-block;
-  width: 10px;
-  background: #00ff00;
+  display:inline-block;
+  width:10px;
+  background:#00ff00;
   margin-left:2px;
   animation: blink 1s steps(2) infinite;
 }
-@keyframes blink { 50% {background: black;} }
-input, button { padding: 10px; margin: 5px; color: black; }
-.hidden { display: none; }
+@keyframes blink {50%{background:black}}
+
+#leftPanel, #rightPanel {
+  padding: 20px;
+  box-sizing: border-box;
+  height: 100%;
+}
+#leftPanel {
+  width: 35%;
+  border-right: 2px solid #00ff00;
+}
+#rightPanel {
+  width: 65%;
+  overflow-y: auto;
+}
+
+input, button, textarea {
+  background: black;
+  border: 2px solid #00ff00;
+  color: #00ff00;
+  font-family: "Courier New", monospace;
+  font-size: 14px;
+  padding: 5px;
+  margin: 5px 0;
+  width: 100%;
+  box-sizing: border-box;
+}
+button {
+  cursor: pointer;
+}
+textarea {height: 60px;}
+h2,h3 {margin: 10px 0;}
+#output {white-space: pre-wrap;}
 </style>
 </head>
 <body>
 
 <div id="terminal">
-  <div id="output"></div>
+  <div id="leftPanel">
+    <h2>Add New Info</h2>
+    <textarea id="newInfo" placeholder="New Classified Info"></textarea>
+    <input type="text" id="adminKey" placeholder="Admin Key">
+    <button onclick="addInfo()">Add Info</button>
+    <p id="addMsg"></p>
+
+    <h2>Remove Info</h2>
+    <input type="text" id="removeKey" placeholder="Key to Remove">
+    <input type="text" id="removeAdminKey" placeholder="Admin Key">
+    <button onclick="removeInfo()">Remove Info</button>
+    <p id="removeMsg"></p>
+  </div>
+
+  <div id="rightPanel">
+    <div id="output"></div>
+  </div>
   <div id="static"></div>
-</div>
-
-<div id="dataDiv" class="hidden">
-  <h2>Database</h2>
-  <div id="infoList"></div>
-
-  <h3>Add New Info</h3>
-  <input type="text" id="newInfo" placeholder="New Classified Info"><br>
-  <input type="text" id="adminKey" placeholder="Admin Key"><br>
-  <button onclick="addInfo()">Add Info</button>
-  <p id="addMsg"></p>
-
-  <h3>Remove Info</h3>
-  <input type="text" id="removeKey" placeholder="Key to Remove"><br>
-  <input type="text" id="removeAdminKey" placeholder="Admin Key"><br>
-  <button onclick="removeInfo()">Remove Info</button>
-  <p id="removeMsg"></p>
 </div>
 
 <script>
@@ -92,7 +117,7 @@ function typeLine(line, delay=30){
       i++;
       if(i>=line.length){
         clearInterval(interval);
-        output.innerHTML += "<br>";
+        output.innerHTML += "\n";
         resolve();
       }
     }, delay);
@@ -117,7 +142,7 @@ async function startTerminal(){
   const accessCode = prompt("Enter access code:");
   if(accessCode === masterCode){
     await typeLine("MASTER ACCESS GRANTED.");
-    await showDatabaseUI();
+    showDatabaseUI();
     return;
   }
 
@@ -127,22 +152,21 @@ async function startTerminal(){
   let found = database.find(entry => entry.key === infoKey);
   if(accessCode === "R3D4CT3D-92XQ" && found){
     await typeLine("ACCESS GRANTED.");
-    await showDatabaseUI();
+    showDatabaseUI();
   } else {
     await typeLine("ACCESS DENIED.");
   }
 }
 
-async function showDatabaseUI(){
-  document.getElementById("dataDiv").classList.remove("hidden");
+function showDatabaseUI(){
   displayInfo();
 }
 
 function displayInfo(){
-  const infoList = document.getElementById("infoList");
+  const infoList = output;
   infoList.innerHTML = "";
   database.forEach(entry=>{
-    infoList.innerHTML += `<p>Key: ${entry.key} | Info: ${entry.info}</p>`;
+    typeLine(`Key: ${entry.key} | Info: ${entry.info}`, 15);
   });
 }
 
