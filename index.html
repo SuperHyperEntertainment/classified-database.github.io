@@ -1,229 +1,82 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Super Hyper Entertainment</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 0;
-      background: #f0f4f8;
-      color: #333;
-      line-height: 1.8;
-      overflow-x: hidden;
-    }
-
-    header {
-      background: #1e1e2f;
-      color: white;
-      padding: 20px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      position: sticky;
-      top: 0;
-      z-index: 1000;
-    }
-
-    header h1 {
-      margin: 0;
-      font-size: 1.6em;
-    }
-
-    /* Hamburger */
-    .hamburger {
-      font-size: 28px;
-      cursor: pointer;
-      display: block;
-    }
-
-    /* Sidebar */
-    .sidebar {
-      height: 100%;
-      width: 0;
-      position: fixed;
-      top: 0;
-      right: 0;
-      background-color: #2b2b40;
-      overflow-x: hidden;
-      transition: 0.4s;
-      padding-top: 60px;
-      z-index: 1001;
-    }
-
-    .sidebar a {
-      padding: 12px 30px;
-      text-decoration: none;
-      font-size: 20px;
-      color: white;
-      display: block;
-      transition: 0.3s;
-    }
-
-    .sidebar a:hover {
-      background: #414165;
-    }
-
-    .sidebar .closebtn {
-      position: absolute;
-      top: 15px;
-      right: 20px;
-      font-size: 40px;
-    }
-
-    main {
-      padding: 50px 10%;
-      position: relative;
-      z-index: 1;
-    }
-
-    section {
-      margin-bottom: 70px;
-    }
-
-    section h2 {
-      font-size: 2.2em;
-      margin-bottom: 15px;
-      color: #1e1e2f;
-    }
-
-    section p {
-      font-size: 1.3em;
-      max-width: 900px;
-    }
-
-    /* Contact link */
-    .contact a {
-      color: #1e90ff;
-      text-decoration: none;
-      font-weight: bold;
-    }
-    .contact a:hover {
-      text-decoration: underline;
-    }
-
-    /* Background geometry */
-    .shape {
-      position: absolute;
-      border-radius: 50%;
-      opacity: 0.15;
-      z-index: 0;
-      animation: float 10s infinite ease-in-out;
-    }
-
-    .circle1 {
-      width: 250px;
-      height: 250px;
-      background: #ff6f61;
-      top: 150px;
-      left: -120px;
-    }
-
-    .circle2 {
-      width: 180px;
-      height: 180px;
-      background: #1e90ff;
-      bottom: 200px;
-      right: -90px;
-      animation-delay: 3s;
-    }
-
-    .circle3 {
-      width: 120px;
-      height: 120px;
-      background: #32cd32;
-      top: 600px;
-      right: 15%;
-      animation-delay: 5s;
-    }
-
-    @keyframes float {
-      0%, 100% { transform: translateY(0px); }
-      50% { transform: translateY(-20px); }
-    }
-
-    footer {
-      background: #1e1e2f;
-      color: white;
-      text-align: center;
-      padding: 15px;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Classified Database Access</title>
+<style>
+  body { font-family: Arial, sans-serif; background: #111; color: #eee; text-align: center; padding: 50px; }
+  input, button { padding: 10px; margin: 5px; }
+  .hidden { display: none; }
+</style>
 </head>
 <body>
-  <header>
-    <h1>Super Hyper Entertainment</h1>
-    <span class="hamburger" onclick="openNav()">☰</span>
-  </header>
+<h1>Classified Database Access</h1>
 
-  <!-- Sidebar -->
-  <div id="mySidebar" class="sidebar">
-    <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
-    <a href="#about">About</a>
-    <a href="#projects">Projects</a>
-    <a href="#contact">Contact</a>
-  </div>
+<div id="loginDiv">
+  <input type="text" id="accessCode" placeholder="Access Code"><br>
+  <input type="text" id="infoCode" placeholder="Info Code"><br>
+  <button onclick="verifyAccess()">Enter</button>
+  <p id="loginMsg"></p>
+</div>
 
-  <main>
-    <!-- Floating shapes -->
-    <div class="shape circle1"></div>
-    <div class="shape circle2"></div>
-    <div class="shape circle3"></div>
+<div id="dataDiv" class="hidden">
+  <h2>Database</h2>
+  <div id="infoList"></div>
+  <h3>Add New Info</h3>
+  <input type="text" id="newInfo" placeholder="New Classified Info"><br>
+  <input type="text" id="adminKey" placeholder="Admin Key"><br>
+  <button onclick="addInfo()">Add Info</button>
+  <p id="addMsg"></p>
+</div>
 
-    <section id="about">
-      <h2>About Us</h2>
-      <p>
-        At Super Hyper Entertainment, we believe that even the smallest ideas can become extraordinary. 
-        Our mission is to help individuals and small teams bring their creative visions to life. 
-        Whether it’s an animation, a game, or an experimental project, we provide the resources, 
-        expertise, and support to turn your concepts into reality. 
-      </p>
-      <p>
-        We focus on empowering creators who may not have large budgets or big studios behind them. 
-        By giving them the tools and knowledge they need, we ensure their projects have the best chance 
-        to succeed. Our philosophy is simple: <strong>creativity should never be limited by scale</strong>. 
-      </p>
-    </section>
+<script>
+const coreAdminKey = "ADM1N-R3D4CT";
+let database = [
+  {info: "Date of release for *REDACTED* is December 15th, 2026.", key: "XJ7-12D6"}
+];
 
-    <section id="projects">
-      <h2>Our Projects</h2>
-      <p>
-        We’ve collaborated on a wide variety of projects, from indie video games to short animated series. 
-        Each one is a testament to the creativity and passion of the teams we’ve worked with. 
-        We don’t just focus on production—we care about storytelling, world-building, and giving audiences 
-        experiences that stick with them long after they’ve finished watching or playing. 
-      </p>
-      <p>
-        Every project is unique, and we take pride in tailoring our approach to match the specific 
-        vision and goals of the creators we partner with. 
-      </p>
-    </section>
+function generateKey() {
+  return Math.random().toString(36).substring(2, 10).toUpperCase();
+}
 
-    <section id="contact" class="contact">
-      <h2>Contact Us</h2>
-      <p>
-        Want to collaborate, ask questions, or pitch your idea? Reach out to us at:  
-        <a href="mailto:superhyper318@gmail.com">superhyper318@gmail.com</a>
-      </p>
-      <p>
-        Clicking the email link will open your default mail app (like Gmail, Outlook, or Apple Mail).
-      </p>
-    </section>
-  </main>
+function verifyAccess() {
+  const accessCode = document.getElementById("accessCode").value;
+  const infoCode = document.getElementById("infoCode").value;
+  
+  let found = database.find(entry => entry.key === infoCode);
+  if (accessCode === "R3D4CT3D-92XQ" && found) {
+    document.getElementById("loginDiv").classList.add("hidden");
+    document.getElementById("dataDiv").classList.remove("hidden");
+    displayInfo();
+  } else {
+    document.getElementById("loginMsg").innerText = "Access Denied!";
+  }
+}
 
-  <footer>
-    <p>© 2025 Super Hyper Entertainment. All rights reserved.</p>
-  </footer>
+function displayInfo() {
+  const infoList = document.getElementById("infoList");
+  infoList.innerHTML = "";
+  database.forEach(entry => {
+    infoList.innerHTML += `<p>Key: ${entry.key} | Info: ${entry.info}</p>`;
+  });
+}
 
-  <script>
-    function openNav() {
-      document.getElementById("mySidebar").style.width = "250px";
-    }
-    function closeNav() {
-      document.getElementById("mySidebar").style.width = "0";
-    }
-  </script>
+function addInfo() {
+  const newInfo = document.getElementById("newInfo").value;
+  const adminKey = document.getElementById("adminKey").value;
+  
+  if (adminKey === coreAdminKey) {
+    const newKey = generateKey();
+    database.push({info: newInfo, key: newKey});
+    document.getElementById("addMsg").innerText = `Info added. Key: ${newKey}`;
+    displayInfo();
+    document.getElementById("newInfo").value = "";
+    document.getElementById("adminKey").value = "";
+  } else {
+    document.getElementById("addMsg").innerText = "Invalid Admin Key!";
+  }
+}
+</script>
 </body>
 </html>
