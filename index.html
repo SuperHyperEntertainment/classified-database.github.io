@@ -110,6 +110,16 @@ let database = [
     keyword: "parker",
     info: "Parker is a trusted assistant of our organization with his own login credentials. Handle any tasks related to him through proper channels only.",
     date: "9/13/2025"
+  },
+  {
+    keyword: "silas",
+    info: "Silas is the official AI of this organization, designed to provide classified keyword-based responses and maintain operational security. Silas responds only to approved keywords and ensures all sensitive information is safely delivered.",
+    date: "9/13/2025"
+  },
+  {
+    keyword: "patrick",
+    info: "Patrick *REDACTED* is the founder and owner of this organization. Coming from an abusive household, he moved in with his mother and pursued his dream of becoming a renowned game developer and animator. Over the years, he developed extensive skills in coding and animation, now working on a major project called 'Friend or Foe' — a highly intelligent AI that exists in multiple mods for ARK: Survival Evolved, Minecraft, Project Zomboid, and other mod-friendly games. The AI’s goal is to betray players in-game, creating trust and then enacting consequences like virtual death, bans, or fear-inducing scenarios. Patrick currently codes and manages this AI project, dedicating all resources to its development and ensuring the organization operates securely under his guidance.",
+    date: "9/13/2025"
   }
 ];
 
@@ -135,7 +145,7 @@ async function typeLine(line, delay=30, className="ai"){
   output.scrollTop = output.scrollHeight;
 }
 
-// FIXED login to trim spaces
+// Login function
 async function login(){
   const user = document.getElementById("usernameInput").value.trim();
   const pass = document.getElementById("passwordInput").value.trim();
@@ -156,12 +166,11 @@ const insults = [
   "Wrong input. Try reading next time.",
   "This isn't rocket science… or is it?",
   "Seriously? That's your question?",
-  "Incorrect. Sending information from your device to *REDACTED*"
+  "Pathetic. Do better."
 ];
 
 async function processQuery(){
   const query = document.getElementById("userQuery").value.trim().toLowerCase();
-  // Show user input
   await typeLine(query, 5, "you");
   
   const result = database.find(entry => query.includes(entry.keyword));
