@@ -51,8 +51,9 @@ body {
   padding: 20px;
   box-sizing: border-box;
   overflow-y: auto;
+  display: flex;
+  flex-direction: column;
 }
-
 input, button {
   background: black;
   border: 2px solid #00ff00;
@@ -65,10 +66,13 @@ input, button {
   box-sizing: border-box;
 }
 button { cursor: pointer; }
-#output {white-space: pre-wrap;}
+#output {white-space: pre-wrap; flex-grow:1; overflow-y:auto; border-top:2px solid #00ff00; padding-top:10px;}
 #loginBox {width: 300px; margin:auto; text-align:center;}
 #welcomeMsg {font-size: 28px; font-weight:bold; margin-bottom:10px; text-align:center;}
 #aiInput {margin-top:10px;}
+.message {margin:2px 0;}
+.you::before {content:"You: ";}
+.ai::before {content:"AI: ";}
 </style>
 </head>
 <body>
@@ -95,12 +99,17 @@ button { cursor: pointer; }
 <script>
 const masterCode = "WARGAMES";
 
-// Database: information and date
+// Database: keywords, information, and dates
 let database = [
   {
     keyword: "salesmen",
     info: "Salesmen is the most relentless opponent of our organization, constantly attempting to sabotage and undermine our efforts. While he fails in most of his schemes, occasional victories are possible, so caution is necessary. Do not trust or engage with him. Likewise, his associate, xlgisthegoat, should also be regarded as untrustworthy and avoided at all costs.",
     date: "2025-09-13"
+  },
+  {
+    keyword: "parker",
+    info: "Parker is a trusted assistant of our organization with his own login credentials. Handle any tasks related to him through proper channels only.",
+    date: "9/13/2025"
   }
 ];
 
@@ -115,16 +124,19 @@ const output = document.getElementById("output");
 const welcomeDiv = document.getElementById("welcomeMsg");
 const aiDiv = document.getElementById("aiInput");
 
-async function typeLine(line, delay=30){
+async function typeLine(line, delay=30, className="ai"){
+  const p = document.createElement("div");
+  p.className = `message ${className}`;
+  output.appendChild(p);
   for(let i=0;i<line.length;i++){
-    output.innerHTML += line[i];
+    p.innerHTML += line[i];
     await new Promise(r=>setTimeout(r,delay));
   }
-  output.innerHTML += "\n";
+  output.scrollTop = output.scrollHeight;
 }
 
 // FIXED login to trim spaces
-function login(){
+async function login(){
   const user = document.getElementById("usernameInput").value.trim();
   const pass = document.getElementById("passwordInput").value.trim();
   if(accounts[user] && accounts[user].password === pass){
@@ -132,18 +144,10 @@ function login(){
     welcomeDiv.innerText = accounts[user].display;
     document.getElementById("loginBox").style.display="none";
     aiDiv.style.display = "block";
-    awaitTypeLine(`AI Terminal Activated. Awaiting query...\n`, 15);
+    await typeLine(`Welcome, ${accounts[user].display.split(", ")[1]}. AI Terminal Activated. Responds based on keywords, not full questions. Awaiting query...\n`, 15);
   } else {
     document.getElementById("loginMsg").innerText = "Invalid username or password!";
   }
-}
-
-async function awaitTypeLine(line, delay=30){
-  for(let i=0;i<line.length;i++){
-    output.innerHTML += line[i];
-    await new Promise(r=>setTimeout(r,delay));
-  }
-  output.innerHTML += "\n";
 }
 
 // AI insults for wrong queries
@@ -155,14 +159,17 @@ const insults = [
   "Pathetic. Do better."
 ];
 
-function processQuery(){
+async function processQuery(){
   const query = document.getElementById("userQuery").value.trim().toLowerCase();
+  // Show user input
+  await typeLine(query, 5, "you");
+  
   const result = database.find(entry => query.includes(entry.keyword));
   if(result){
-    typeLine(`Information found: ${result.date} ${result.info}`);
+    await typeLine(`Information found: ${result.date} ${result.info}`, 15, "ai");
   } else {
     const insult = insults[Math.floor(Math.random()*insults.length)];
-    typeLine(insult);
+    await typeLine(insult, 15, "ai");
   }
   document.getElementById("userQuery").value="";
 }
