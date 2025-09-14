@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Classified Database Terminal</title>
+<title>Classified AI Terminal</title>
 <style>
 body {
   margin:0;
@@ -68,6 +68,7 @@ button { cursor: pointer; }
 #output {white-space: pre-wrap;}
 #loginBox {width: 300px; margin:auto; text-align:center;}
 #welcomeMsg {font-size: 28px; font-weight:bold; margin-bottom:10px; text-align:center;}
+#aiInput {margin-top:10px;}
 </style>
 </head>
 <body>
@@ -83,6 +84,10 @@ button { cursor: pointer; }
     </div>
     <div id="welcomeMsg"></div>
     <div id="output"></div>
+    <div id="aiInput" style="display:none;">
+      <input type="text" id="userQuery" placeholder="Ask about classified information">
+      <button onclick="processQuery()">Submit</button>
+    </div>
   </div>
   <div id="static"></div>
 </div>
@@ -90,10 +95,13 @@ button { cursor: pointer; }
 <script>
 const masterCode = "WARGAMES";
 
-// Database: only info and date added
+// Database: information and date
 let database = [
-  {info: "Sample classified information. Date added: 2025-09-13"},
-  {info: "Salesmen is the most relentless opponent of our organization, constantly attempting to sabotage and undermine our efforts. While he fails in most of his schemes, occasional victories are possible, so caution is necessary. Do not trust or engage with him. Likewise, his associate, xlgisthegoat, should also be regarded as untrustworthy and avoided at all costs. Date added: 2025-09-13"}
+  {
+    keyword: "salesmen",
+    info: "Salesmen is the most relentless opponent of our organization, constantly attempting to sabotage and undermine our efforts. While he fails in most of his schemes, occasional victories are possible, so caution is necessary. Do not trust or engage with him. Likewise, his associate, xlgisthegoat, should also be regarded as untrustworthy and avoided at all costs.",
+    date: "2025-09-13"
+  }
 ];
 
 // Accounts with display messages
@@ -105,6 +113,7 @@ const accounts = {
 let loggedInUser = null;
 const output = document.getElementById("output");
 const welcomeDiv = document.getElementById("welcomeMsg");
+const aiDiv = document.getElementById("aiInput");
 
 async function typeLine(line, delay=30){
   for(let i=0;i<line.length;i++){
@@ -112,13 +121,6 @@ async function typeLine(line, delay=30){
     await new Promise(r=>setTimeout(r,delay));
   }
   output.innerHTML += "\n";
-}
-
-async function displayInfo(){
-  output.innerHTML = "";
-  for(const entry of database){
-    await typeLine(entry.info, 15);
-  }
 }
 
 // FIXED login to trim spaces
@@ -129,10 +131,40 @@ function login(){
     loggedInUser = user;
     welcomeDiv.innerText = accounts[user].display;
     document.getElementById("loginBox").style.display="none";
-    displayInfo();
+    aiDiv.style.display = "block";
+    awaitTypeLine(`AI Terminal Activated. Awaiting query...\n`, 15);
   } else {
     document.getElementById("loginMsg").innerText = "Invalid username or password!";
   }
+}
+
+async function awaitTypeLine(line, delay=30){
+  for(let i=0;i<line.length;i++){
+    output.innerHTML += line[i];
+    await new Promise(r=>setTimeout(r,delay));
+  }
+  output.innerHTML += "\n";
+}
+
+// AI insults for wrong queries
+const insults = [
+  "Are you even trying?",
+  "Wrong input. Try reading next time.",
+  "This isn't rocket science… or is it?",
+  "Seriously? That's your question?",
+  "Pathetic. Do better."
+];
+
+function processQuery(){
+  const query = document.getElementById("userQuery").value.trim().toLowerCase();
+  const result = database.find(entry => query.includes(entry.keyword));
+  if(result){
+    typeLine(`Information found: ${result.date} ${result.info}`);
+  } else {
+    const insult = insults[Math.floor(Math.random()*insults.length)];
+    typeLine(insult);
+  }
+  document.getElementById("userQuery").value="";
 }
 </script>
 </body>
