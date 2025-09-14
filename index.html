@@ -42,22 +42,14 @@ body {
 }
 @keyframes blink {50%{background:black}}
 
-#leftPanel, #rightPanel {
+#rightPanel {
+  width: 100%;
   padding: 20px;
   box-sizing: border-box;
-  height: 100%;
-}
-#leftPanel {
-  width: 35%;
-  border-right: 2px solid #00ff00;
-  display: none; /* hidden until login */
-}
-#rightPanel {
-  width: 65%;
   overflow-y: auto;
 }
 
-input, button, textarea {
+input, button {
   background: black;
   border: 2px solid #00ff00;
   color: #00ff00;
@@ -69,8 +61,6 @@ input, button, textarea {
   box-sizing: border-box;
 }
 button { cursor: pointer; }
-textarea {height: 60px;}
-h2,h3 {margin: 10px 0;}
 #output {white-space: pre-wrap;}
 #loginBox {width: 300px;}
 #welcomeMsg {font-size: 28px; font-weight:bold; margin-bottom:10px;}
@@ -79,21 +69,6 @@ h2,h3 {margin: 10px 0;}
 <body>
 
 <div id="terminal">
-  <div id="leftPanel">
-    <h2>Add New Info</h2>
-    <p>⚠️ Add directly in the code now.</p>
-    <textarea id="newInfo" placeholder="New Classified Info (editing in code now)"></textarea>
-    <input type="text" id="adminKey" placeholder="Admin Key">
-    <button onclick="addInfo()">Add Info</button>
-    <p id="addMsg"></p>
-
-    <h2>Remove Info</h2>
-    <input type="text" id="removeKey" placeholder="Key to Remove">
-    <input type="text" id="removeAdminKey" placeholder="Admin Key">
-    <button onclick="removeInfo()">Remove Info</button>
-    <p id="removeMsg"></p>
-  </div>
-
   <div id="rightPanel">
     <div id="loginBox">
       <h2>Login</h2>
@@ -109,12 +84,12 @@ h2,h3 {margin: 10px 0;}
 </div>
 
 <script>
-const coreAdminKey = "ADM1N-R3D4CT";
 const masterCode = "WARGAMES";
 
 // Database now editable directly in code
 let database = [
-  {key: "XJ7-12D6", info: "Sample classified information."}
+  {key: "XJ7-12D6", info: "Sample classified information."},
+  {key: "INFO-001", info: "Salesmen is the most relentless opponent of our organization, constantly attempting to sabotage and undermine our efforts. While he fails in most of his schemes, occasional victories are possible, so caution is necessary. Do not trust or engage with him. Likewise, his associate, xlgisthegoat, should also be regarded as untrustworthy and avoided at all costs."}
 ];
 
 // Accounts with display messages
@@ -157,51 +132,10 @@ function login(){
     loggedInUser = user;
     welcomeDiv.innerText = accounts[user].display;
     document.getElementById("loginBox").style.display="none";
-    document.getElementById("leftPanel").style.display="block";
     displayInfo();
   } else {
     document.getElementById("loginMsg").innerText = "Invalid username or password!";
   }
-}
-
-function generateKey(){
-  return Math.random().toString(36).substring(2,10).toUpperCase();
-}
-
-function addInfo(){
-  if(!loggedInUser){document.getElementById("addMsg").innerText="Login required!"; return;}
-  const newInfo = document.getElementById("newInfo").value;
-  const adminKey = document.getElementById("adminKey").value;
-  if(adminKey !== coreAdminKey){
-    document.getElementById("addMsg").innerText="Invalid Admin Key!";
-    return;
-  }
-  const newKey = generateKey();
-  database.push({info:newInfo,key:newKey});
-  document.getElementById("addMsg").innerText = `Info added. Key: ${newKey}`;
-  displayInfo();
-  document.getElementById("newInfo").value="";
-  document.getElementById("adminKey").value="";
-}
-
-function removeInfo(){
-  if(!loggedInUser){document.getElementById("removeMsg").innerText="Login required!"; return;}
-  const keyToRemove = document.getElementById("removeKey").value;
-  const adminKey = document.getElementById("removeAdminKey").value;
-  if(adminKey !== coreAdminKey){
-    document.getElementById("removeMsg").innerText="Invalid Admin Key!";
-    return;
-  }
-  const index = database.findIndex(entry=>entry.key===keyToRemove);
-  if(index===-1){
-    document.getElementById("removeMsg").innerText="Key not found!";
-    return;
-  }
-  database.splice(index,1);
-  document.getElementById("removeMsg").innerText = `Info with key ${keyToRemove} removed.`;
-  displayInfo();
-  document.getElementById("removeKey").value="";
-  document.getElementById("removeAdminKey").value="";
 }
 </script>
 </body>
