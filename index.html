@@ -1,172 +1,174 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Classified AI Terminal</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Classified Learning AI Terminal</title>
 <style>
-body {
-  margin:0;
-  background: black;
-  color: #00ff00;
-  font-family: "Courier New", monospace;
-  overflow: hidden;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-}
-#terminal {
-  position: relative;
-  width: 80vw;
-  height: 90vh;
-  transform: scale(1,1.02) skewY(-0.5deg);
-}
-#static {
-  pointer-events: none;
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  top:0; left:0;
-  background: repeating-linear-gradient(
-    rgba(0,255,0,0.05) 0 1px,
-    transparent 1px 2px
-  );
-  animation: staticAnim 0.05s infinite;
-  z-index: 1000;
-}
-@keyframes staticAnim {0%{background-position:0 0}100%{background-position:0 100%}}
-.cursor {
-  display:inline-block;
-  width:10px;
-  background:#00ff00;
-  margin-left:2px;
-  animation: blink 1s steps(2) infinite;
-}
-@keyframes blink {50%{background:black}}
-
-#rightPanel {
-  width: 100%;
-  height: 100%;
-  padding: 20px;
-  box-sizing: border-box;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-}
-input, button {
-  background: black;
-  border: 2px solid #00ff00;
-  color: #00ff00;
-  font-family: "Courier New", monospace;
-  font-size: 14px;
-  padding: 5px;
-  margin: 5px 0;
-  width: 100%;
-  box-sizing: border-box;
-}
-button { cursor: pointer; }
-#output {white-space: pre-wrap; flex-grow:1; overflow-y:auto; border-top:2px solid #00ff00; padding-top:10px;}
-#loginBox {width: 300px; margin:auto; text-align:center;}
-#welcomeMsg {font-size: 28px; font-weight:bold; margin-bottom:10px; text-align:center;}
-#aiInput {margin-top:10px;}
-.message {margin:2px 0;}
-.you::before {content:"You: ";}
-.ai::before {content:"AI: ";}
+  /* CRT theme styles (kept consistent) */
+  :root { --green: #00ff00; --bg: #000; --panel-w: 80vw; --panel-h: 90vh; }
+  html,body{height:100%;margin:0;background:var(--bg);color:var(--green);font-family:"Courier New",monospace;display:flex;align-items:center;justify-content:center;}
+  #terminal{position:relative;width:var(--panel-w);height:var(--panel-h);transform:scale(1,1.02) skewY(-0.5deg);box-sizing:border-box;border:2px solid rgba(0,255,0,0.12);overflow:hidden}
+  #static{pointer-events:none;position:absolute;inset:0;background:repeating-linear-gradient(rgba(0,255,0,0.03) 0 1px,transparent 1px 2px);animation:staticAnim .05s infinite;z-index:900}
+  @keyframes staticAnim{0%{background-position:0 0}100%{background-position:0 100%}}
+  .container{display:flex;height:100%}
+  .left{width:36%;border-right:2px solid var(--green);box-sizing:border-box;padding:18px;display:flex;flex-direction:column;gap:12px}
+  .right{flex:1;display:flex;flex-direction:column;padding:18px;box-sizing:border-box;gap:8px;overflow:hidden}
+  h2{margin:4px 0 8px 0}
+  input,textarea,select,button{background:transparent;border:2px solid var(--green);color:var(--green);font-family:inherit;padding:8px;box-sizing:border-box}
+  button{cursor:pointer}
+  #loginBox{width:100%;max-width:340px;margin:auto}
+  #welcomeMsg{font-size:28px;font-weight:bold;text-align:center;margin-bottom:6px}
+  #output{flex:1;overflow:auto;border-top:2px solid var(--green);padding-top:10px;white-space:pre-wrap}
+  .message{margin:6px 0}
+  .you::before{content:"You: ";font-weight:bold}
+  .ai::before{content:"AI: ";font-weight:bold}
+  .sys::before{content:"SYS: ";font-weight:bold}
+  .panelTitle{font-size:14px;margin:6px 0 0 0}
+  .small{font-size:12px;color:rgba(0,255,0,0.8)}
+  .pendingItem{border:1px dashed rgba(0,255,0,0.12);padding:8px;margin:6px 0}
+  .ownerControls{margin-top:auto}
+  .flexRow{display:flex;gap:8px;align-items:center}
+  label{display:block;margin:6px 0;font-size:13px}
+  .kbd{font-family:monospace;background:rgba(0,255,0,0.04);padding:2px 6px;border-radius:4px}
+  /* responsive */
+  @media (max-width:900px){.container{flex-direction:column}.left{width:100%;border-right:none;border-bottom:2px solid var(--green)}}
 </style>
 </head>
 <body>
+  <div id="terminal">
+    <div class="container">
+      <div class="left" id="leftPanel">
+        <div id="loginBox">
+          <h2>Login</h2>
+          <input id="usernameInput" placeholder="Username" /><br />
+          <input id="passwordInput" placeholder="Password" type="password" /><br />
+          <button id="loginBtn">Login</button>
+          <p id="loginMsg" class="small"></p>
+        </div>
 
-<div id="terminal">
-  <div id="rightPanel">
-    <div id="loginBox">
-      <h2>Login</h2>
-      <input type="text" id="usernameInput" placeholder="Username"><br>
-      <input type="password" id="passwordInput" placeholder="Password"><br>
-      <button onclick="login()">Login</button>
-      <p id="loginMsg"></p>
+        <div id="ownerPanel" style="display:none;">
+          <h2>Owner Approvals</h2>
+          <div class="small">Pending examples awaiting your approval (owners only).</div>
+          <div id="pendingList" style="max-height:36vh;overflow:auto;margin-top:8px"></div>
+
+          <div class="panelTitle">Manual Training</div>
+          <div class="small">Create or extend keywords manually.</div>
+          <label>Keyword (single word)
+            <input id="manualKeyword" placeholder="keyword" />
+          </label>
+          <label>Information / Note
+            <textarea id="manualInfo" rows="3" placeholder="What should the AI say?"></textarea>
+          </label>
+          <label>Date added
+            <input id="manualDate" placeholder="YYYY-MM-DD or 9/13/2025" />
+          </label>
+          <div class="flexRow">
+            <button id="createKeywordBtn">Create/Update Keyword</button>
+            <button id="flushPendingBtn">Clear All Pending</button>
+          </div>
+
+          <div class="ownerControls">
+            <div class="panelTitle">Owner settings</div>
+            <label><input type="checkbox" id="autoAcceptToggle" /> Auto-accept suggestions above similarity threshold</label>
+            <label>Auto-accept threshold (0.0 - 1.0)
+              <input id="autoThreshold" type="number" step="0.05" min="0" max="1" value="0.7" />
+            </label>
+          </div>
+        </div>
+
+        <div style="margin-top:10px">
+          <div class="panelTitle">Status</div>
+          <div class="small">Master code: <span class="kbd">WARGAMES</span></div>
+          <div class="small">Owner accounts: <span id="ownerList" class="kbd"></span></div>
+          <div class="small">Persistence: <span class="kbd">localStorage</span></div>
+        </div>
+      </div>
+
+      <div class="right">
+        <div id="welcomeMsg"></div>
+
+        <div id="output" aria-live="polite"></div>
+
+        <div id="aiInput" style="display:none">
+          <div class="small">Note: AI responds to <b>keywords</b> contained in your input (not full natural questions).</div>
+          <div style="display:flex;gap:8px;margin-top:8px">
+            <input id="userQuery" placeholder="Type a keyword or sentence..." />
+            <button id="submitQuery">Submit</button>
+          </div>
+        </div>
+      </div>
     </div>
-    <div id="welcomeMsg"></div>
-    <div id="output"></div>
-    <div id="aiInput" style="display:none;">
-      <input type="text" id="userQuery" placeholder="Ask about classified information">
-      <button onclick="processQuery()">Submit</button>
-    </div>
+
+    <div id="static"></div>
   </div>
-  <div id="static"></div>
-</div>
 
 <script>
-const masterCode = "WARGAMES";
+/* ---------------------------
+  Persistent learning AI terminal
+   - Stores DB and pending examples in localStorage
+   - Uses Levenshtein similarity to suggest matches
+   - Owners approve suggestions (or create keywords)
+   - Keeps all CRT/chat UI behavior and insults
+----------------------------*/
 
-// Database: keywords, information, and dates
-let database = [
-  {
-    keyword: "salesmen",
-    info: "Salesmen is the most relentless opponent of our organization, constantly attempting to sabotage and undermine our efforts. While he fails in most of his schemes, occasional victories are possible, so caution is necessary. Do not trust or engage with him. Likewise, his associate, xlgisthegoat, should also be regarded as untrustworthy and avoided at all costs.",
-    date: "2025-09-13"
-  },
-  {
-    keyword: "parker",
-    info: "Parker is a trusted assistant of our organization with his own login credentials. Handle any tasks related to him through proper channels only.",
-    date: "9/13/2025"
-  },
-  {
-    keyword: "silas",
-    info: "Silas is the official AI of this organization, designed to provide classified keyword-based responses and maintain operational security. Silas responds only to approved keywords and ensures all sensitive information is safely delivered.",
-    date: "9/13/2025"
-  },
-  {
-    keyword: "patrick",
-    info: "Patrick *REDACTED* is the founder and owner of this organization. Coming from an abusive household, he moved in with his mother and pursued his dream of becoming a renowned game developer and animator. Over the years, he developed extensive skills in coding and animation, now working on a major project called 'Friend or Foe' — a highly intelligent AI that exists in multiple mods for ARK: Survival Evolved, Minecraft, Project Zomboid, and other mod-friendly games. The AI’s goal is to betray players in-game, creating trust and then enacting consequences like virtual death, bans, or fear-inducing scenarios. Patrick currently codes and manages this AI project, dedicating all resources to its development and ensuring the organization operates securely under his guidance.",
-    date: "9/13/2025"
-  },
-  {
-    keyword: "kaylee",
-    info: "Kaylee is a talented Voice Actor within the organization and is expected to soon take on the role of partial ownership. Her contributions strengthen both the creative and structural foundation of the group.",
-    date: "9/13/2025"
-  }
+/* --------- Configuration & initial data (kept from prior state) ---------- */
+const STORAGE_KEY_DB = "silas_db_v1";
+const STORAGE_KEY_PENDING = "silas_pending_v1";
+const STORAGE_KEY_ACCOUNTS = "silas_accounts_v1";
+
+const initialDatabase = [
+  { keyword: "salesmen", info: "Salesmen is the most relentless opponent of our organization, constantly attempting to sabotage and undermine our efforts. While he fails in most of his schemes, occasional victories are possible, so caution is necessary. Do not trust or engage with him. Likewise, his associate, xlgisthegoat, should also be regarded as untrustworthy and avoided at all costs.", date: "2025-09-13", examples: ["tell me about salesmen"] },
+  { keyword: "parker", info: "Parker is a trusted assistant of our organization with his own login credentials. Handle any tasks related to him through proper channels only.", date: "2025-09-13", examples: ["parker info"] },
+  { keyword: "silas", info: "Silas is the official AI of this organization, designed to provide classified keyword-based responses and maintain operational security. Silas responds only to approved keywords and ensures all sensitive information is safely delivered.", date: "2025-09-13", examples: ["who is silas", "silas info"] },
+  { keyword: "patrick", info: "Patrick *REDACTED* is the founder and owner of this organization. Coming from an abusive household, he moved in with his mother and pursued his dream of becoming a renowned game developer and animator. Over the years, he developed extensive skills in coding and animation, now working on a major project called 'Friend or Foe' — a highly intelligent AI that exists in multiple mods for ARK: Survival Evolved, Minecraft, Project Zomboid, and other mod-friendly games. The AI’s goal is to betray players in-game, creating trust and then enacting consequences like virtual death, bans, or fear-inducing scenarios. Patrick currently codes and manages this AI project, dedicating all resources to its development and ensuring the organization operates securely under his guidance.", date: "2025-09-13", examples: ["tell me about patrick"] },
+  { keyword: "kaylee", info: "Kaylee is a talented Voice Actor within the organization and is expected to soon take on the role of partial ownership. Her contributions strengthen both the creative and structural foundation of the group.", date: "2025-09-13", examples: ["kaylee role"] }
 ];
 
-// Accounts with display messages
-const accounts = { 
-  "NP_ZHT": {password:"ACCESSCODE-29XQ", display:"Welcome, Patrick"},
-  "ELM_QWE": {password:"ACCESSCODE-67CW", display:"Welcome, Parker"},
-  "TNC_UIO": {password:"ACCESSCODE-34VE", display:"Welcome, Kaylee"}
+const initialAccounts = {
+  "NP_ZHT": { password: "ACCESSCODE-29XQ", display: "Welcome, Patrick", isOwner:true },
+  "ELM_QWE": { password: "ACCESSCODE-67CW", display: "Welcome, Parker", isOwner:false },
+  "TNC_UIO": { password: "ACCESSCODE-34VE", display: "Welcome, Kaylee", isOwner:false }
 };
 
+/* ---------- Utility: localStorage persistence ---------- */
+function saveDB(db){ localStorage.setItem(STORAGE_KEY_DB, JSON.stringify(db)); }
+function loadDB(){ try{ const s = localStorage.getItem(STORAGE_KEY_DB); return s? JSON.parse(s): JSON.parse(JSON.stringify(initialDatabase)); }catch(e){ return JSON.parse(JSON.stringify(initialDatabase)); } }
+function savePending(p){ localStorage.setItem(STORAGE_KEY_PENDING, JSON.stringify(p)); }
+function loadPending(){ try{ const s = localStorage.getItem(STORAGE_KEY_PENDING); return s? JSON.parse(s): []; }catch(e){ return []; } }
+function saveAccounts(a){ localStorage.setItem(STORAGE_KEY_ACCOUNTS, JSON.stringify(a)); }
+function loadAccounts(){ try{ const s = localStorage.getItem(STORAGE_KEY_ACCOUNTS); return s? JSON.parse(s): JSON.parse(JSON.stringify(initialAccounts)); }catch(e){ return JSON.parse(JSON.stringify(initialAccounts)); } }
+
+/* ---------- In-memory state ---------- */
+let database = loadDB();
+let pending = loadPending(); // array of {query, suggestedKeyword, bestScore, timestamp}
+let accounts = loadAccounts();
 let loggedInUser = null;
+
+/* ---------- UI refs ---------- */
+const loginBox = document.getElementById("loginBox");
+const loginBtn = document.getElementById("loginBtn");
+const usernameInput = document.getElementById("usernameInput");
+const passwordInput = document.getElementById("passwordInput");
+const loginMsg = document.getElementById("loginMsg");
+const ownerPanel = document.getElementById("ownerPanel");
+const ownerList = document.getElementById("ownerList");
+const pendingList = document.getElementById("pendingList");
+const manualKeyword = document.getElementById("manualKeyword");
+const manualInfo = document.getElementById("manualInfo");
+const manualDate = document.getElementById("manualDate");
+const createKeywordBtn = document.getElementById("createKeywordBtn");
+const flushPendingBtn = document.getElementById("flushPendingBtn");
+const autoAcceptToggle = document.getElementById("autoAcceptToggle");
+const autoThreshold = document.getElementById("autoThreshold");
+
+const welcomeMsg = document.getElementById("welcomeMsg");
 const output = document.getElementById("output");
-const welcomeDiv = document.getElementById("welcomeMsg");
-const aiDiv = document.getElementById("aiInput");
+const aiInput = document.getElementById("aiInput");
+const userQuery = document.getElementById("userQuery");
+const submitQuery = document.getElementById("submitQuery");
 
-async function typeLine(line, delay=30, className="ai"){
-  const p = document.createElement("div");
-  p.className = `message ${className}`;
-  output.appendChild(p);
-  for(let i=0;i<line.length;i++){
-    p.innerHTML += line[i];
-    await new Promise(r=>setTimeout(r,delay));
-  }
-  output.scrollTop = output.scrollHeight;
-}
-
-// Login function
-async function login(){
-  const user = document.getElementById("usernameInput").value.trim();
-  const pass = document.getElementById("passwordInput").value.trim();
-  if(accounts[user] && accounts[user].password === pass){
-    loggedInUser = user;
-    welcomeDiv.innerText = accounts[user].display;
-    document.getElementById("loginBox").style.display="none";
-    aiDiv.style.display = "block";
-    await typeLine(`Welcome, ${accounts[user].display.split(", ")[1]}. AI Terminal Activated. Responds based on keywords, not full questions. Awaiting query...\n`, 15);
-  } else {
-    document.getElementById("loginMsg").innerText = "Invalid username or password!";
-  }
-}
-
-// AI insults for wrong queries
+/* ---------- Insults & settings ---------- */
 const insults = [
   "Are you even trying?",
   "Wrong input. Try reading next time.",
@@ -174,20 +176,269 @@ const insults = [
   "Seriously? That's your question?",
   "Pathetic. Do better."
 ];
+const LEVENSHTEIN_THRESHOLD = 0.7; // default similarity threshold (normalized)
 
-async function processQuery(){
-  const query = document.getElementById("userQuery").value.trim().toLowerCase();
-  await typeLine(query, 5, "you");
-  
-  const result = database.find(entry => query.includes(entry.keyword));
-  if(result){
-    await typeLine(`Information found: ${result.date} ${result.info}`, 15, "ai");
-  } else {
-    const insult = insults[Math.floor(Math.random()*insults.length)];
-    await typeLine(insult, 15, "ai");
+/* ---------- Levenshtein distance & normalized similarity (0-1) ---------- */
+function levenshtein(a, b){
+  if(a===b) return 0;
+  const m=a.length, n=b.length;
+  if(m===0) return n;
+  if(n===0) return m;
+  const v0 = new Array(n+1), v1 = new Array(n+1);
+  for(let j=0;j<=n;j++) v0[j]=j;
+  for(let i=0;i<m;i++){
+    v1[0]=i+1;
+    for(let j=0;j<n;j++){
+      const cost = a[i]===b[j]?0:1;
+      v1[j+1] = Math.min(v1[j]+1, v0[j+1]+1, v0[j]+cost);
+    }
+    for(let j=0;j<=n;j++) v0[j]=v1[j];
   }
-  document.getElementById("userQuery").value="";
+  return v1[n];
 }
+function normalizedSimilarity(a,b){
+  if(!a && !b) return 1;
+  const dist = levenshtein(a,b);
+  const maxLen = Math.max(a.length,b.length);
+  if(maxLen===0) return 1;
+  return 1 - (dist / maxLen);
+}
+
+/* ---------- Persistence helpers ---------- */
+function persistAll(){ saveDB(database); savePending(pending); saveAccounts(accounts); }
+
+/* ---------- UI helpers: append chat lines ---------- */
+function appendMessage(text, cls="ai", fast=false){
+  const p = document.createElement("div");
+  p.className = `message ${cls}`;
+  output.appendChild(p);
+  // typing effect
+  const delay = fast ? 4 : 12;
+  let i=0;
+  function step(){
+    if(i<text.length){ p.innerHTML += text[i++]; output.scrollTop = output.scrollHeight; setTimeout(step, delay); }
+  }
+  step();
+}
+
+/* --------- Owner listing --------- */
+function refreshOwnerList(){
+  const owners = Object.entries(accounts).filter(([,v])=>v.isOwner).map(([k,v])=>k);
+  ownerList.textContent = owners.join(", ");
+}
+
+/* ---------- Render pending queue ---------- */
+function renderPending(){
+  pendingList.innerHTML = "";
+  if(pending.length===0){
+    pendingList.innerHTML = "<div class='small'>No pending examples.</div>";
+    return;
+  }
+  pending.slice().reverse().forEach((pItem, idx)=>{
+    const wrapper = document.createElement("div");
+    wrapper.className = "pendingItem";
+    const age = new Date(pItem.timestamp).toLocaleString();
+    wrapper.innerHTML = `<div class="small">Example: <span class="kbd">${escapeHtml(pItem.query)}</span></div>
+      <div class="small">Suggested match: <span class="kbd">${escapeHtml(pItem.suggestedKeyword || "—")}</span> (score: ${pItem.bestScore.toFixed(2)})</div>
+      <div class="small">When: ${age}</div>`;
+    const btnApprove = document.createElement("button");
+    btnApprove.textContent = "Approve → Add to Keyword";
+    btnApprove.onclick = ()=>{ approvePending(pItem); };
+    const btnReject = document.createElement("button");
+    btnReject.textContent = "Reject";
+    btnReject.onclick = ()=>{ rejectPending(pItem); };
+    const btnCreateNew = document.createElement("button");
+    btnCreateNew.textContent = "Create New Keyword from Example";
+    btnCreateNew.onclick = ()=>{ createFromPending(pItem); };
+    wrapper.appendChild(document.createElement("br"));
+    wrapper.appendChild(btnApprove);
+    wrapper.appendChild(btnCreateNew);
+    wrapper.appendChild(btnReject);
+    pendingList.appendChild(wrapper);
+  });
+}
+
+/* ---------- Approve / Reject flows ---------- */
+function approvePending(pItem){
+  // if suggestedKeyword present, add example to its examples array
+  if(pItem.suggestedKeyword){
+    const k = database.find(kd => kd.keyword === pItem.suggestedKeyword);
+    if(k){
+      k.examples = k.examples || [];
+      if(!k.examples.includes(pItem.query)) k.examples.push(pItem.query);
+      saveDB(database);
+    }
+  }
+  // remove pending item
+  pending = pending.filter(x => x !== pItem);
+  savePending(pending);
+  renderPending();
+  appendMessage("SYS: Approved example.", "sys", true);
+}
+
+function rejectPending(pItem){
+  pending = pending.filter(x => x !== pItem);
+  savePending(pending);
+  renderPending();
+  appendMessage("SYS: Rejected example.", "sys", true);
+}
+
+function createFromPending(pItem){
+  const kw = prompt("Create keyword (single word) for this example:", pItem.suggestedKeyword || "");
+  if(!kw) return;
+  const info = prompt("Enter information for this new keyword:");
+  const date = prompt("Date added (e.g. 2025-09-13):", new Date().toLocaleDateString());
+  const newEntry = { keyword: kw.toLowerCase().trim(), info: info || "No info provided.", date: date, examples: [pItem.query] };
+  database.push(newEntry);
+  saveDB(database);
+  // remove pending
+  pending = pending.filter(x => x !== pItem);
+  savePending(pending);
+  renderPending();
+  appendMessage(`SYS: Created new keyword '${newEntry.keyword}'.`, "sys", true);
+}
+
+/* ---------- Manual create/update keyword ---------- */
+createKeywordBtn.addEventListener("click", ()=>{
+  const kw = (manualKeyword.value||"").toLowerCase().trim();
+  const info = manualInfo.value || "";
+  const date = manualDate.value || new Date().toLocaleDateString();
+  if(!kw){ alert("Keyword required."); return; }
+  let exist = database.find(d=>d.keyword===kw);
+  if(exist){
+    exist.info = info || exist.info;
+    exist.date = date || exist.date;
+    appendMessage(`SYS: Updated keyword ${kw}.`, "sys", true);
+  } else {
+    database.push({keyword:kw, info:info || "No info.", date: date, examples:[]});
+    appendMessage(`SYS: Created keyword ${kw}.`, "sys", true);
+  }
+  manualKeyword.value=""; manualInfo.value=""; manualDate.value="";
+  saveDB(database);
+});
+
+/* ---------- Flush pending ---------- */
+flushPendingBtn.addEventListener("click", ()=>{
+  if(!confirm("Clear all pending examples?")) return;
+  pending = [];
+  savePending(pending);
+  renderPending();
+  appendMessage("SYS: Cleared pending queue.", "sys", true);
+});
+
+/* ---------- Escape helper ---------- */
+function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])); }
+
+/* ---------- Main query processing with learning ---------- */
+async function processQueryFlow(rawQuery){
+  if(!rawQuery) return;
+  const q = rawQuery.trim();
+  // show user's message
+  appendMessage(q, "you", true);
+
+  // normalize
+  const qNorm = q.toLowerCase();
+
+  // 1) exact keyword include check
+  let matched = database.find(d => qNorm.includes(d.keyword.toLowerCase()));
+  if(matched){
+    // reply with info
+    appendMessage(`Information found: ${matched.date} ${matched.info}`, "ai");
+    // store example automatically
+    matched.examples = matched.examples || [];
+    if(!matched.examples.includes(q)) matched.examples.push(q);
+    saveDB(database);
+    return;
+  }
+
+  // 2) fuzzy match against keywords (compare against keywords and examples)
+  let best = {score:0, entry:null};
+  for(const entry of database){
+    const key = entry.keyword.toLowerCase();
+    const simKey = normalizedSimilarity(qNorm, key);
+    let sim = simKey;
+    // also compare tokens: if any example is similar, raise score
+    if(entry.examples && entry.examples.length){
+      for(const ex of entry.examples){
+        const simEx = normalizedSimilarity(qNorm, ex.toLowerCase());
+        if(simEx > sim) sim = simEx;
+      }
+    }
+    if(sim > best.score){ best = {score:sim, entry}; }
+  }
+
+  const threshold = parseFloat(autoThreshold.value) || LEVENSHTEIN_THRESHOLD;
+  // if best.score is high enough and autoAccept on, accept & respond
+  if(best.entry && best.score >= threshold && autoAcceptToggle.checked){
+    appendMessage(`Information found: ${best.entry.date} ${best.entry.info}`, "ai");
+    // add example to entry
+    best.entry.examples = best.entry.examples || [];
+    if(!best.entry.examples.includes(q)) best.entry.examples.push(q);
+    saveDB(database);
+    return;
+  }
+
+  // otherwise add to pending suggestions and reply with insult
+  const suggestedKeyword = best.entry ? best.entry.keyword : null;
+  const pendingObj = { query: q, suggestedKeyword: suggestedKeyword, bestScore: best.score, timestamp: Date.now() };
+  pending.push(pendingObj);
+  savePending(pending);
+  renderPending();
+
+  // insult response
+  const insult = insults[Math.floor(Math.random()*insults.length)];
+  appendMessage(insult, "ai");
+}
+
+/* ---------- Login flow ---------- */
+loginBtn.addEventListener("click", ()=>{ loginFlow(); });
+passwordInput.addEventListener("keydown", (e)=>{ if(e.key==="Enter") loginFlow(); });
+usernameInput.addEventListener("keydown", (e)=>{ if(e.key==="Enter") loginFlow(); });
+
+function loginFlow(){
+  const user = (usernameInput.value||"").trim();
+  const pass = (passwordInput.value||"").trim();
+  if(!user){ loginMsg.textContent = "Enter username."; return; }
+  const acct = accounts[user];
+  if(!acct || acct.password !== pass){ loginMsg.textContent = "Invalid username or password!"; return; }
+  // successful login
+  loggedInUser = user;
+  loginMsg.textContent = "";
+  loginBox.style.display = "none";
+  document.getElementById("aiInput").style.display = "block";
+  welcomeMsg.textContent = accounts[user].display;
+  // show owner panel if owner
+  if(accounts[user].isOwner){
+    ownerPanel.style.display = "block";
+  }
+  appendMessage(`${accounts[user].display.split(", ")[1]}`, "ai", true);
+  appendMessage("AI Terminal Activated. Responds based on keywords, not full questions. Awaiting query...", "ai", true);
+  renderPending();
+  refreshOwnerList();
+}
+
+/* ---------- wire up query submit ---------- */
+submitQuery.addEventListener("click", ()=>{ processQueryFromUI(); });
+userQuery.addEventListener("keydown", (e)=>{ if(e.key==="Enter") processQueryFromUI(); });
+
+function processQueryFromUI(){
+  const q = (userQuery.value||"").trim();
+  if(!q) return;
+  processQueryFlow(q);
+  userQuery.value = "";
+}
+
+/* ---------- bootstrap: ensure persistence keys exist ---------- */
+(function bootstrap(){
+  // ensure accounts persisted
+  saveAccounts(accounts);
+  // ensure DB persisted if not existing
+  if(!localStorage.getItem(STORAGE_KEY_DB)) saveDB(database);
+  if(!localStorage.getItem(STORAGE_KEY_PENDING)) savePending(pending);
+  renderPending();
+  refreshOwnerList();
+})();
+
 </script>
 </body>
 </html>
