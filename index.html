@@ -3,16 +3,16 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Classified Learning AI Terminal</title>
+<title>Silas — Learning Classified AI Terminal</title>
 <style>
-  /* CRT theme styles (kept consistent) */
-  :root { --green: #00ff00; --bg: #000; --panel-w: 80vw; --panel-h: 90vh; }
-  html,body{height:100%;margin:0;background:var(--bg);color:var(--green);font-family:"Courier New",monospace;display:flex;align-items:center;justify-content:center;}
+  /* CRT theme: green monochrome, warped screen, static overlay */
+  :root{--green:#00ff00;--bg:#000;--panel-w:86vw;--panel-h:90vh}
+  html,body{height:100%;margin:0;background:var(--bg);color:var(--green);font-family:"Courier New",monospace;display:flex;align-items:center;justify-content:center}
   #terminal{position:relative;width:var(--panel-w);height:var(--panel-h);transform:scale(1,1.02) skewY(-0.5deg);box-sizing:border-box;border:2px solid rgba(0,255,0,0.12);overflow:hidden}
   #static{pointer-events:none;position:absolute;inset:0;background:repeating-linear-gradient(rgba(0,255,0,0.03) 0 1px,transparent 1px 2px);animation:staticAnim .05s infinite;z-index:900}
   @keyframes staticAnim{0%{background-position:0 0}100%{background-position:0 100%}}
   .container{display:flex;height:100%}
-  .left{width:36%;border-right:2px solid var(--green);box-sizing:border-box;padding:18px;display:flex;flex-direction:column;gap:12px}
+  .left{width:34%;border-right:2px solid var(--green);box-sizing:border-box;padding:18px;display:flex;flex-direction:column;gap:12px}
   .right{flex:1;display:flex;flex-direction:column;padding:18px;box-sizing:border-box;gap:8px;overflow:hidden}
   h2{margin:4px 0 8px 0}
   input,textarea,select,button{background:transparent;border:2px solid var(--green);color:var(--green);font-family:inherit;padding:8px;box-sizing:border-box}
@@ -31,30 +31,36 @@
   .flexRow{display:flex;gap:8px;align-items:center}
   label{display:block;margin:6px 0;font-size:13px}
   .kbd{font-family:monospace;background:rgba(0,255,0,0.04);padding:2px 6px;border-radius:4px}
-  /* responsive */
-  @media (max-width:900px){.container{flex-direction:column}.left{width:100%;border-right:none;border-bottom:2px solid var(--green)}}
+  .muted{color:rgba(0,255,0,0.5)}
+  .hint{font-size:12px;color:rgba(0,255,0,0.6)}
+  @media(max-width:900px){.container{flex-direction:column}.left{width:100%;border-right:none;border-bottom:2px solid var(--green)}}
 </style>
 </head>
 <body>
-  <div id="terminal">
+  <div id="terminal" role="application" aria-label="Silas learning terminal">
     <div class="container">
       <div class="left" id="leftPanel">
         <div id="loginBox">
-          <h2>Login</h2>
-          <input id="usernameInput" placeholder="Username" /><br />
-          <input id="passwordInput" placeholder="Password" type="password" /><br />
-          <button id="loginBtn">Login</button>
+          <h2>Login / Owner Setup</h2>
+          <div class="hint">If this is the first run you will be prompted to create an owner account — no secret values are embedded in this file.</div>
+          <input id="usernameInput" placeholder="Username" autocomplete="username" /><br />
+          <input id="passwordInput" placeholder="Password" type="password" autocomplete="current-password" /><br />
+          <label class="small muted">If you haven't set up an owner, check "Create owner" below and set credentials.</label>
+          <div class="flexRow">
+            <label style="display:flex;align-items:center;gap:8px"><input type="checkbox" id="createOwner"> Create owner</label>
+            <button id="loginBtn">Login</button>
+          </div>
           <p id="loginMsg" class="small"></p>
         </div>
 
         <div id="ownerPanel" style="display:none;">
           <h2>Owner Approvals</h2>
           <div class="small">Pending examples awaiting your approval (owners only).</div>
-          <div id="pendingList" style="max-height:36vh;overflow:auto;margin-top:8px"></div>
+          <div id="pendingList" style="max-height:32vh;overflow:auto;margin-top:8px"></div>
 
           <div class="panelTitle">Manual Training</div>
-          <div class="small">Create or extend keywords manually.</div>
-          <label>Keyword (single word)
+          <div class="small">Create or extend keywords manually (owners only).</div>
+          <label>Keyword (single token)
             <input id="manualKeyword" placeholder="keyword" />
           </label>
           <label>Information / Note
@@ -65,37 +71,44 @@
           </label>
           <div class="flexRow">
             <button id="createKeywordBtn">Create/Update Keyword</button>
-            <button id="flushPendingBtn">Clear All Pending</button>
+            <button id="flushPendingBtn">Clear Pending</button>
           </div>
 
           <div class="ownerControls">
             <div class="panelTitle">Owner settings</div>
-            <label><input type="checkbox" id="autoAcceptToggle" /> Auto-accept suggestions above similarity threshold</label>
+            <label><input type="checkbox" id="autoAcceptToggle" /> Auto-accept suggestions above threshold</label>
             <label>Auto-accept threshold (0.0 - 1.0)
-              <input id="autoThreshold" type="number" step="0.05" min="0" max="1" value="0.7" />
+              <input id="autoThreshold" type="number" step="0.05" min="0" max="1" value="0.75" />
             </label>
+            <div style="margin-top:8px">
+              <button id="exportBtn">Export DB & Pending</button>
+              <button id="importBtn">Import DB & Pending</button>
+              <input id="importFile" type="file" accept=".json" style="display:none" />
+            </div>
           </div>
         </div>
 
-        <div style="margin-top:10px">
+        <div style="margin-top:12px">
           <div class="panelTitle">Status</div>
-          <div class="small">Master code: <span class="kbd">WARGAMES</span></div>
-          <div class="small">Owner accounts: <span id="ownerList" class="kbd"></span></div>
           <div class="small">Persistence: <span class="kbd">localStorage</span></div>
+          <div class="small">Owner accounts: <span id="ownerList" class="kbd"></span></div>
+          <div class="small muted">No access codes or sensitive credentials are baked into this file.</div>
         </div>
       </div>
 
       <div class="right">
-        <div id="welcomeMsg"></div>
+        <div id="welcomeMsg" aria-live="polite"></div>
 
-        <div id="output" aria-live="polite"></div>
+        <div id="output" role="log" aria-live="polite"></div>
 
         <div id="aiInput" style="display:none">
           <div class="small">Note: AI responds to <b>keywords</b> contained in your input (not full natural questions).</div>
           <div style="display:flex;gap:8px;margin-top:8px">
             <input id="userQuery" placeholder="Type a keyword or sentence..." />
             <button id="submitQuery">Submit</button>
+            <button id="clearBtn" title="Clear chat">Clear</button>
           </div>
+          <div class="hint" style="margin-top:6px">The AI learns from examples. Owners review pending examples to teach the AI.</div>
         </div>
       </div>
     </div>
@@ -104,52 +117,54 @@
   </div>
 
 <script>
-/* ---------------------------
-  Persistent learning AI terminal
-   - Stores DB and pending examples in localStorage
-   - Uses Levenshtein similarity to suggest matches
-   - Owners approve suggestions (or create keywords)
-   - Keeps all CRT/chat UI behavior and insults
-----------------------------*/
+/* ============================
+  Silas — Learning AI Terminal
+  - Large single-file implementation
+  - No hardcoded secrets: owners create accounts locally
+  - Stores DB & pending examples in localStorage
+  - Uses normalized Levenshtein + example matching for fuzzy suggestions
+  - Owners approve/reject pending examples; manual keyword creation possible
+  - CRT UI + chat style preserved
+============================ */
 
-/* --------- Configuration & initial data (kept from prior state) ---------- */
-const STORAGE_KEY_DB = "silas_db_v1";
-const STORAGE_KEY_PENDING = "silas_pending_v1";
-const STORAGE_KEY_ACCOUNTS = "silas_accounts_v1";
+/* -------------------------
+   Storage keys & initial data
+   (Important: no embedded passwords or master code here)
+--------------------------*/
+const STORAGE_DB = "silas_learning_db_v2";
+const STORAGE_PENDING = "silas_learning_pending_v2";
+const STORAGE_ACCOUNTS = "silas_learning_accounts_v2";
 
-const initialDatabase = [
-  { keyword: "salesmen", info: "Salesmen is the most relentless opponent of our organization, constantly attempting to sabotage and undermine our efforts. While he fails in most of his schemes, occasional victories are possible, so caution is necessary. Do not trust or engage with him. Likewise, his associate, xlgisthegoat, should also be regarded as untrustworthy and avoided at all costs.", date: "2025-09-13", examples: ["tell me about salesmen"] },
-  { keyword: "parker", info: "Parker is a trusted assistant of our organization with his own login credentials. Handle any tasks related to him through proper channels only.", date: "2025-09-13", examples: ["parker info"] },
-  { keyword: "silas", info: "Silas is the official AI of this organization, designed to provide classified keyword-based responses and maintain operational security. Silas responds only to approved keywords and ensures all sensitive information is safely delivered.", date: "2025-09-13", examples: ["who is silas", "silas info"] },
-  { keyword: "patrick", info: "Patrick *REDACTED* is the founder and owner of this organization. Coming from an abusive household, he moved in with his mother and pursued his dream of becoming a renowned game developer and animator. Over the years, he developed extensive skills in coding and animation, now working on a major project called 'Friend or Foe' — a highly intelligent AI that exists in multiple mods for ARK: Survival Evolved, Minecraft, Project Zomboid, and other mod-friendly games. The AI’s goal is to betray players in-game, creating trust and then enacting consequences like virtual death, bans, or fear-inducing scenarios. Patrick currently codes and manages this AI project, dedicating all resources to its development and ensuring the organization operates securely under his guidance.", date: "2025-09-13", examples: ["tell me about patrick"] },
-  { keyword: "kaylee", info: "Kaylee is a talented Voice Actor within the organization and is expected to soon take on the role of partial ownership. Her contributions strengthen both the creative and structural foundation of the group.", date: "2025-09-13", examples: ["kaylee role"] }
+/* Initial knowledge base (safe to include informational entries) */
+const initialDB = [
+  { keyword: "salesmen", info: "Salesmen is the most relentless opponent of our organization, constantly attempting to sabotage and undermine our efforts. While he fails in most of his schemes, occasional victories are possible; caution is necessary.", date: "2025-09-13", examples: ["tell me about salesmen", "who is salesmen"] },
+  { keyword: "parker", info: "Parker is a trusted assistant of our organization with his own login credentials. Handle tasks related to him through proper channels only.", date: "2025-09-13", examples: ["parker info"] },
+  { keyword: "silas", info: "Silas is the official AI of this organization, designed to provide classified keyword-based responses and maintain operational security. Silas responds only to approved keywords and ensures sensitive information is delivered safely.", date: "2025-09-13", examples: ["who is silas", "silas info"] },
+  { keyword: "patrick", info: "Patrick *REDACTED* is the founder and owner. He rose from a difficult childhood to become a game developer and animator. He now leads the 'Friend or Foe' AI project — a high-intelligence in-game AI that can betray players as part of its design, used across multiple mod-capable titles.", date: "2025-09-13", examples: ["patrick backstory", "who is patrick"] },
+  { keyword: "kaylee", info: "Kaylee is a talented Voice Actor within the organization and is expected to soon take on partial ownership. Her creative contributions are vital to the group.", date: "2025-09-13", examples: ["kaylee role"] }
 ];
 
-const initialAccounts = {
-  "NP_ZHT": { password: "ACCESSCODE-29XQ", display: "Welcome, Patrick", isOwner:true },
-  "ELM_QWE": { password: "ACCESSCODE-67CW", display: "Welcome, Parker", isOwner:false },
-  "TNC_UIO": { password: "ACCESSCODE-34VE", display: "Welcome, Kaylee", isOwner:false }
-};
+/* Accounts object will be created by user (no credentials included here) */
+const initialAccounts = {}; // empty on purpose — owner must create locally
 
-/* ---------- Utility: localStorage persistence ---------- */
-function saveDB(db){ localStorage.setItem(STORAGE_KEY_DB, JSON.stringify(db)); }
-function loadDB(){ try{ const s = localStorage.getItem(STORAGE_KEY_DB); return s? JSON.parse(s): JSON.parse(JSON.stringify(initialDatabase)); }catch(e){ return JSON.parse(JSON.stringify(initialDatabase)); } }
-function savePending(p){ localStorage.setItem(STORAGE_KEY_PENDING, JSON.stringify(p)); }
-function loadPending(){ try{ const s = localStorage.getItem(STORAGE_KEY_PENDING); return s? JSON.parse(s): []; }catch(e){ return []; } }
-function saveAccounts(a){ localStorage.setItem(STORAGE_KEY_ACCOUNTS, JSON.stringify(a)); }
-function loadAccounts(){ try{ const s = localStorage.getItem(STORAGE_KEY_ACCOUNTS); return s? JSON.parse(s): JSON.parse(JSON.stringify(initialAccounts)); }catch(e){ return JSON.parse(JSON.stringify(initialAccounts)); } }
+/* -------------------------
+   Utility: localStorage persistence
+--------------------------*/
+function saveJSON(key, obj){ localStorage.setItem(key, JSON.stringify(obj)); }
+function loadJSON(key, fallback){ try{ const s = localStorage.getItem(key); return s? JSON.parse(s): fallback; }catch(e){ return fallback; } }
 
-/* ---------- In-memory state ---------- */
-let database = loadDB();
-let pending = loadPending(); // array of {query, suggestedKeyword, bestScore, timestamp}
-let accounts = loadAccounts();
-let loggedInUser = null;
+let DB = loadJSON(STORAGE_DB, initialDB.slice());
+let PENDING = loadJSON(STORAGE_PENDING, []);
+let ACCOUNTS = loadJSON(STORAGE_ACCOUNTS, initialAccounts);
 
-/* ---------- UI refs ---------- */
+/* -------------------------
+   UI refs
+--------------------------*/
 const loginBox = document.getElementById("loginBox");
 const loginBtn = document.getElementById("loginBtn");
 const usernameInput = document.getElementById("usernameInput");
 const passwordInput = document.getElementById("passwordInput");
+const createOwnerCheckbox = document.getElementById("createOwner");
 const loginMsg = document.getElementById("loginMsg");
 const ownerPanel = document.getElementById("ownerPanel");
 const ownerList = document.getElementById("ownerList");
@@ -167,19 +182,28 @@ const output = document.getElementById("output");
 const aiInput = document.getElementById("aiInput");
 const userQuery = document.getElementById("userQuery");
 const submitQuery = document.getElementById("submitQuery");
+const clearBtn = document.getElementById("clearBtn");
+const exportBtn = document.getElementById("exportBtn");
+const importBtn = document.getElementById("importBtn");
+const importFile = document.getElementById("importFile");
 
-/* ---------- Insults & settings ---------- */
-const insults = [
+/* -------------------------
+   Misc settings
+--------------------------*/
+const DEFAULT_THRESHOLD = 0.75;
+const INSULTS = [
   "Are you even trying?",
   "Wrong input. Try reading next time.",
   "This isn't rocket science… or is it?",
   "Seriously? That's your question?",
   "Pathetic. Do better."
 ];
-const LEVENSHTEIN_THRESHOLD = 0.7; // default similarity threshold (normalized)
 
-/* ---------- Levenshtein distance & normalized similarity (0-1) ---------- */
-function levenshtein(a, b){
+/* -------------------------
+   Levenshtein distance (normalized similarity 0..1)
+--------------------------*/
+function levenshtein(a,b){
+  a = a || ""; b = b || "";
   if(a===b) return 0;
   const m=a.length, n=b.length;
   if(m===0) return n;
@@ -197,248 +221,271 @@ function levenshtein(a, b){
   return v1[n];
 }
 function normalizedSimilarity(a,b){
-  if(!a && !b) return 1;
+  a = String(a||""); b = String(b||"");
+  if(a.length===0 && b.length===0) return 1;
   const dist = levenshtein(a,b);
   const maxLen = Math.max(a.length,b.length);
   if(maxLen===0) return 1;
   return 1 - (dist / maxLen);
 }
 
-/* ---------- Persistence helpers ---------- */
-function persistAll(){ saveDB(database); savePending(pending); saveAccounts(accounts); }
+/* -------------------------
+   Basic safe hashing for local credential storage (not cryptographically strong)
+   - purpose: avoid storing plain text in accidental exports; owner can choose stronger approach offline
+--------------------------*/
+function simpleHash(s){
+  let h=2166136261>>>0;
+  for(let i=0;i<s.length;i++){ h = Math.imul(h^s.charCodeAt(i),16777619); }
+  return (h>>>0).toString(16);
+}
 
-/* ---------- UI helpers: append chat lines ---------- */
-function appendMessage(text, cls="ai", fast=false){
-  const p = document.createElement("div");
-  p.className = `message ${cls}`;
-  output.appendChild(p);
-  // typing effect
-  const delay = fast ? 4 : 12;
+/* -------------------------
+   Helper: persist everything
+--------------------------*/
+function persistAll(){ saveJSON(STORAGE_DB, DB); saveJSON(STORAGE_PENDING, PENDING); saveJSON(STORAGE_ACCOUNTS, ACCOUNTS); }
+
+/* -------------------------
+   Chat UI helpers (typing effect)
+--------------------------*/
+function appendMessageTyped(text, cls="ai", speed=12){
+  const p = document.createElement("div"); p.className = `message ${cls}`; output.appendChild(p);
   let i=0;
-  function step(){
-    if(i<text.length){ p.innerHTML += text[i++]; output.scrollTop = output.scrollHeight; setTimeout(step, delay); }
-  }
+  const step = ()=>{
+    if(i<text.length){ p.innerHTML += text[i++]; output.scrollTop = output.scrollHeight; setTimeout(step, speed); }
+  };
   step();
 }
-
-/* --------- Owner listing --------- */
-function refreshOwnerList(){
-  const owners = Object.entries(accounts).filter(([,v])=>v.isOwner).map(([k,v])=>k);
-  ownerList.textContent = owners.join(", ");
+function appendMessageInstant(text, cls="ai"){
+  const p = document.createElement("div"); p.className = `message ${cls}`; p.textContent = text; output.appendChild(p); output.scrollTop = output.scrollHeight;
 }
 
-/* ---------- Render pending queue ---------- */
+/* -------------------------
+   Render pending queue (owner)
+--------------------------*/
 function renderPending(){
   pendingList.innerHTML = "";
-  if(pending.length===0){
-    pendingList.innerHTML = "<div class='small'>No pending examples.</div>";
-    return;
-  }
-  pending.slice().reverse().forEach((pItem, idx)=>{
-    const wrapper = document.createElement("div");
-    wrapper.className = "pendingItem";
-    const age = new Date(pItem.timestamp).toLocaleString();
-    wrapper.innerHTML = `<div class="small">Example: <span class="kbd">${escapeHtml(pItem.query)}</span></div>
-      <div class="small">Suggested match: <span class="kbd">${escapeHtml(pItem.suggestedKeyword || "—")}</span> (score: ${pItem.bestScore.toFixed(2)})</div>
-      <div class="small">When: ${age}</div>`;
-    const btnApprove = document.createElement("button");
-    btnApprove.textContent = "Approve → Add to Keyword";
-    btnApprove.onclick = ()=>{ approvePending(pItem); };
-    const btnReject = document.createElement("button");
-    btnReject.textContent = "Reject";
-    btnReject.onclick = ()=>{ rejectPending(pItem); };
-    const btnCreateNew = document.createElement("button");
-    btnCreateNew.textContent = "Create New Keyword from Example";
-    btnCreateNew.onclick = ()=>{ createFromPending(pItem); };
+  if(PENDING.length===0){ pendingList.innerHTML = "<div class='small'>No pending examples.</div>"; return; }
+  PENDING.slice().reverse().forEach(item=>{
+    const wrapper = document.createElement("div"); wrapper.className = "pendingItem";
+    const ts = new Date(item.timestamp).toLocaleString();
+    wrapper.innerHTML = `<div class="small">Example: <span class="kbd">${escapeHtml(item.query)}</span></div>
+      <div class="small">Suggested: <span class="kbd">${escapeHtml(item.suggestedKeyword || "—")}</span> (score: ${item.bestScore.toFixed(2)})</div>
+      <div class="small">When: ${ts}</div>`;
+    const approve = document.createElement("button"); approve.textContent="Approve"; approve.onclick = ()=>approvePending(item);
+    const createNew = document.createElement("button"); createNew.textContent="Create New Keyword"; createNew.onclick = ()=>createFromPending(item);
+    const reject = document.createElement("button"); reject.textContent="Reject"; reject.onclick = ()=>rejectPending(item);
     wrapper.appendChild(document.createElement("br"));
-    wrapper.appendChild(btnApprove);
-    wrapper.appendChild(btnCreateNew);
-    wrapper.appendChild(btnReject);
+    wrapper.appendChild(approve); wrapper.appendChild(createNew); wrapper.appendChild(reject);
     pendingList.appendChild(wrapper);
   });
 }
 
-/* ---------- Approve / Reject flows ---------- */
-function approvePending(pItem){
-  // if suggestedKeyword present, add example to its examples array
-  if(pItem.suggestedKeyword){
-    const k = database.find(kd => kd.keyword === pItem.suggestedKeyword);
-    if(k){
-      k.examples = k.examples || [];
-      if(!k.examples.includes(pItem.query)) k.examples.push(pItem.query);
-      saveDB(database);
+/* -------------------------
+   Approve / reject helpers
+--------------------------*/
+function approvePending(item){
+  if(item.suggestedKeyword){
+    const entry = DB.find(d=>d.keyword===item.suggestedKeyword);
+    if(entry){
+      entry.examples = entry.examples || [];
+      if(!entry.examples.includes(item.query)) entry.examples.push(item.query);
+      persistAll();
+      appendMessageInstant(`SYS: Approved example and attached to '${entry.keyword}'.`, "sys");
     }
   }
-  // remove pending item
-  pending = pending.filter(x => x !== pItem);
-  savePending(pending);
-  renderPending();
-  appendMessage("SYS: Approved example.", "sys", true);
+  PENDING = PENDING.filter(x=>x!==item); persistAll(); renderPending();
 }
-
-function rejectPending(pItem){
-  pending = pending.filter(x => x !== pItem);
-  savePending(pending);
-  renderPending();
-  appendMessage("SYS: Rejected example.", "sys", true);
+function rejectPending(item){
+  PENDING = PENDING.filter(x=>x!==item); persistAll(); renderPending(); appendMessageInstant("SYS: Rejected example.", "sys");
 }
-
-function createFromPending(pItem){
-  const kw = prompt("Create keyword (single word) for this example:", pItem.suggestedKeyword || "");
+function createFromPending(item){
+  const kw = prompt("Keyword (single token) for this example:", item.suggestedKeyword||"").trim().toLowerCase();
   if(!kw) return;
-  const info = prompt("Enter information for this new keyword:");
+  const info = prompt("Enter info text for this keyword (visible to logged users):", "");
   const date = prompt("Date added (e.g. 2025-09-13):", new Date().toLocaleDateString());
-  const newEntry = { keyword: kw.toLowerCase().trim(), info: info || "No info provided.", date: date, examples: [pItem.query] };
-  database.push(newEntry);
-  saveDB(database);
-  // remove pending
-  pending = pending.filter(x => x !== pItem);
-  savePending(pending);
-  renderPending();
-  appendMessage(`SYS: Created new keyword '${newEntry.keyword}'.`, "sys", true);
+  DB.push({ keyword: kw, info: info || "No info provided.", date: date, examples: [item.query] });
+  PENDING = PENDING.filter(x=>x!==item); persistAll(); renderPending(); appendMessageInstant(`SYS: Created keyword '${kw}'.`, "sys");
 }
 
-/* ---------- Manual create/update keyword ---------- */
+/* -------------------------
+   Manual keyword create/update
+--------------------------*/
 createKeywordBtn.addEventListener("click", ()=>{
   const kw = (manualKeyword.value||"").toLowerCase().trim();
-  const info = manualInfo.value || "";
-  const date = manualDate.value || new Date().toLocaleDateString();
+  const info = manualInfo.value||"";
+  const date = manualDate.value||new Date().toLocaleDateString();
   if(!kw){ alert("Keyword required."); return; }
-  let exist = database.find(d=>d.keyword===kw);
-  if(exist){
-    exist.info = info || exist.info;
-    exist.date = date || exist.date;
-    appendMessage(`SYS: Updated keyword ${kw}.`, "sys", true);
+  const existing = DB.find(d=>d.keyword===kw);
+  if(existing){
+    existing.info = info || existing.info;
+    existing.date = date || existing.date;
+    appendMessageInstant(`SYS: Updated '${kw}'.`, "sys");
   } else {
-    database.push({keyword:kw, info:info || "No info.", date: date, examples:[]});
-    appendMessage(`SYS: Created keyword ${kw}.`, "sys", true);
+    DB.push({keyword:kw, info:info||"No info", date:date, examples:[]});
+    appendMessageInstant(`SYS: Created '${kw}'.`, "sys");
   }
   manualKeyword.value=""; manualInfo.value=""; manualDate.value="";
-  saveDB(database);
+  persistAll();
 });
 
-/* ---------- Flush pending ---------- */
+/* -------------------------
+   Flush pending
+--------------------------*/
 flushPendingBtn.addEventListener("click", ()=>{
-  if(!confirm("Clear all pending examples?")) return;
-  pending = [];
-  savePending(pending);
-  renderPending();
-  appendMessage("SYS: Cleared pending queue.", "sys", true);
+  if(!confirm("Clear pending examples?")) return;
+  PENDING = []; persistAll(); renderPending(); appendMessageInstant("SYS: Cleared pending queue.", "sys");
 });
 
-/* ---------- Escape helper ---------- */
-function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])); }
+/* -------------------------
+   Export / Import DB & Pending
+--------------------------*/
+exportBtn && exportBtn.addEventListener("click", ()=>{
+  const payload = { db: DB, pending: PENDING, accountsMeta: Object.keys(ACCOUNTS).map(u=>({user:u,isOwner:ACCOUNTS[u].isOwner})) };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], {type:"application/json"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a"); a.href = url; a.download = "silas_export.json"; a.click(); URL.revokeObjectURL(url);
+});
 
-/* ---------- Main query processing with learning ---------- */
-async function processQueryFlow(rawQuery){
-  if(!rawQuery) return;
-  const q = rawQuery.trim();
-  // show user's message
-  appendMessage(q, "you", true);
+importBtn && importBtn.addEventListener("click", ()=> importFile.click());
+importFile && importFile.addEventListener("change", (e)=>{
+  const f = e.target.files[0]; if(!f) return;
+  const reader = new FileReader();
+  reader.onload = ()=> {
+    try{
+      const parsed = JSON.parse(reader.result);
+      if(parsed.db) DB = parsed.db; if(parsed.pending) PENDING = parsed.pending;
+      persistAll(); renderPending(); appendMessageInstant("SYS: Import completed.", "sys");
+    }catch(err){ alert("Invalid file."); }
+  };
+  reader.readAsText(f);
+});
 
-  // normalize
-  const qNorm = q.toLowerCase();
+/* -------------------------
+   Escaping helper
+--------------------------*/
+function escapeHtml(str){ return String(str||"").replace(/[&<>"']/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])); }
 
-  // 1) exact keyword include check
-  let matched = database.find(d => qNorm.includes(d.keyword.toLowerCase()));
+/* -------------------------
+   Core query processing + learning flow
+--------------------------*/
+async function processQueryFlow(raw){
+  const query = (raw||"").trim();
+  if(!query) return;
+  appendMessageInstant(query, "you");
+  const qNorm = query.toLowerCase();
+
+  // 1) direct keyword containment (exact token match or substring)
+  let matched = DB.find(d => qNorm.includes(d.keyword.toLowerCase()));
   if(matched){
-    // reply with info
-    appendMessage(`Information found: ${matched.date} ${matched.info}`, "ai");
-    // store example automatically
-    matched.examples = matched.examples || [];
-    if(!matched.examples.includes(q)) matched.examples.push(q);
-    saveDB(database);
-    return;
+    appendMessageTyped(`Information found: ${matched.date} ${matched.info}`, "ai");
+    matched.examples = matched.examples || []; if(!matched.examples.includes(query)) matched.examples.push(query);
+    persistAll(); return;
   }
 
-  // 2) fuzzy match against keywords (compare against keywords and examples)
+  // 2) fuzzy matching across keywords and examples
   let best = {score:0, entry:null};
-  for(const entry of database){
+  for(const entry of DB){
     const key = entry.keyword.toLowerCase();
     const simKey = normalizedSimilarity(qNorm, key);
-    let sim = simKey;
-    // also compare tokens: if any example is similar, raise score
+    let score = simKey;
     if(entry.examples && entry.examples.length){
       for(const ex of entry.examples){
-        const simEx = normalizedSimilarity(qNorm, ex.toLowerCase());
-        if(simEx > sim) sim = simEx;
+        const simEx = normalizedSimilarity(qNorm, (ex||"").toLowerCase());
+        if(simEx > score) score = simEx;
       }
     }
-    if(sim > best.score){ best = {score:sim, entry}; }
+    if(score > best.score){ best = {score, entry}; }
   }
 
-  const threshold = parseFloat(autoThreshold.value) || LEVENSHTEIN_THRESHOLD;
-  // if best.score is high enough and autoAccept on, accept & respond
+  const threshold = parseFloat(autoThreshold.value) || DEFAULT_THRESHOLD;
   if(best.entry && best.score >= threshold && autoAcceptToggle.checked){
-    appendMessage(`Information found: ${best.entry.date} ${best.entry.info}`, "ai");
-    // add example to entry
-    best.entry.examples = best.entry.examples || [];
-    if(!best.entry.examples.includes(q)) best.entry.examples.push(q);
-    saveDB(database);
-    return;
+    // auto accept: reply and add example
+    appendMessageTyped(`Information found: ${best.entry.date} ${best.entry.info}`, "ai");
+    best.entry.examples = best.entry.examples || []; if(!best.entry.examples.includes(query)) best.entry.examples.push(query);
+    persistAll(); return;
   }
 
-  // otherwise add to pending suggestions and reply with insult
-  const suggestedKeyword = best.entry ? best.entry.keyword : null;
-  const pendingObj = { query: q, suggestedKeyword: suggestedKeyword, bestScore: best.score, timestamp: Date.now() };
-  pending.push(pendingObj);
-  savePending(pending);
-  renderPending();
+  // 3) otherwise: push a pending suggestion and insult
+  const suggestion = best.entry ? best.entry.keyword : null;
+  const pendingObj = { query: query, suggestedKeyword: suggestion, bestScore: best.score, timestamp: Date.now() };
+  PENDING.push(pendingObj); persistAll(); renderPending();
 
-  // insult response
-  const insult = insults[Math.floor(Math.random()*insults.length)];
-  appendMessage(insult, "ai");
+  const insult = INSULTS[Math.floor(Math.random()*INSULTS.length)];
+  appendMessageTyped(insult, "ai");
 }
 
-/* ---------- Login flow ---------- */
-loginBtn.addEventListener("click", ()=>{ loginFlow(); });
-passwordInput.addEventListener("keydown", (e)=>{ if(e.key==="Enter") loginFlow(); });
-usernameInput.addEventListener("keydown", (e)=>{ if(e.key==="Enter") loginFlow(); });
+/* -------------------------
+   Login / account handling
+   - No credentials in code. Owner(s) create credentials locally.
+   - Simple hash used to avoid raw password in exports.
+--------------------------*/
+function refreshOwnerList(){
+  const owners = Object.keys(ACCOUNTS).filter(u=>ACCOUNTS[u].isOwner);
+  ownerList.textContent = owners.join(", ") || "none";
+}
 
 function loginFlow(){
   const user = (usernameInput.value||"").trim();
   const pass = (passwordInput.value||"").trim();
-  if(!user){ loginMsg.textContent = "Enter username."; return; }
-  const acct = accounts[user];
-  if(!acct || acct.password !== pass){ loginMsg.textContent = "Invalid username or password!"; return; }
-  // successful login
-  loggedInUser = user;
-  loginMsg.textContent = "";
-  loginBox.style.display = "none";
-  document.getElementById("aiInput").style.display = "block";
-  welcomeMsg.textContent = accounts[user].display;
-  // show owner panel if owner
-  if(accounts[user].isOwner){
-    ownerPanel.style.display = "block";
+  if(!user || !pass){ loginMsg.textContent = "Enter username & password."; return; }
+
+  // If "create owner" checked and there is no owner yet OR user wants to create new owner
+  if(createOwnerCheckbox.checked){
+    // Create account locally (owner)
+    ACCOUNTS[user] = { pwdHash: simpleHash(pass), isOwner:true };
+    saveJSON(STORAGE_ACCOUNTS, ACCOUNTS);
+    persistAll();
+    afterLoginSuccess(user);
+    return;
   }
-  appendMessage(`${accounts[user].display.split(", ")[1]}`, "ai", true);
-  appendMessage("AI Terminal Activated. Responds based on keywords, not full questions. Awaiting query...", "ai", true);
-  renderPending();
-  refreshOwnerList();
+
+  // If account exists, verify
+  const acct = ACCOUNTS[user];
+  if(!acct){ loginMsg.textContent = "Unknown account. To create an owner account, check 'Create owner' and set credentials."; return; }
+  if(acct.pwdHash !== simpleHash(pass)){ loginMsg.textContent = "Invalid credentials."; return; }
+  afterLoginSuccess(user);
 }
 
-/* ---------- wire up query submit ---------- */
-submitQuery.addEventListener("click", ()=>{ processQueryFromUI(); });
-userQuery.addEventListener("keydown", (e)=>{ if(e.key==="Enter") processQueryFromUI(); });
-
-function processQueryFromUI(){
-  const q = (userQuery.value||"").trim();
-  if(!q) return;
-  processQueryFlow(q);
-  userQuery.value = "";
+function afterLoginSuccess(user){
+  loginMsg.textContent = "";
+  usernameInput.value=""; passwordInput.value=""; createOwnerCheckbox.checked=false;
+  loginBox.style.display = "none";
+  aiInput.style.display = "block";
+  welcomeMsg.textContent = (ACCOUNTS[user].display || `Welcome, ${user}`);
+  // ensure account has display name
+  ACCOUNTS[user].display = ACCOUNTS[user].display || `Welcome, ${user}`;
+  persistAll();
+  // show owner panel if owner
+  if(ACCOUNTS[user].isOwner) ownerPanel.style.display = "block";
+  renderPending(); refreshOwnerList();
+  appendMessageInstant(`${ACCOUNTS[user].display.split(", ")[1] || user}`, "ai");
+  appendMessageInstant("AI Terminal Activated. Responds based on keywords, not full questions. Awaiting query...", "ai");
 }
 
-/* ---------- bootstrap: ensure persistence keys exist ---------- */
+/* -------------------------
+   Wire up UI events
+--------------------------*/
+loginBtn.addEventListener("click", ()=>loginFlow());
+passwordInput.addEventListener("keydown", (e)=>{ if(e.key==="Enter") loginFlow(); });
+usernameInput.addEventListener("keydown", (e)=>{ if(e.key==="Enter") loginFlow(); });
+
+submitQuery.addEventListener("click", ()=>{ const q = userQuery.value||""; processQueryFlow(q); userQuery.value=""; });
+userQuery.addEventListener("keydown", (e)=>{ if(e.key==="Enter"){ const q = userQuery.value||""; processQueryFlow(q); userQuery.value=""; }});
+clearBtn.addEventListener("click", ()=>{ output.innerHTML=""; });
+
+refreshOwnerList();
+renderPending();
+
+/* -------------------------
+   Bootstrap: persist defaults if not present (DB present by design)
+--------------------------*/
 (function bootstrap(){
-  // ensure accounts persisted
-  saveAccounts(accounts);
-  // ensure DB persisted if not existing
-  if(!localStorage.getItem(STORAGE_KEY_DB)) saveDB(database);
-  if(!localStorage.getItem(STORAGE_KEY_PENDING)) savePending(pending);
-  renderPending();
-  refreshOwnerList();
+  if(!localStorage.getItem(STORAGE_DB)) saveJSON(STORAGE_DB, DB);
+  if(!localStorage.getItem(STORAGE_PENDING)) saveJSON(STORAGE_PENDING, PENDING);
+  if(!localStorage.getItem(STORAGE_ACCOUNTS)) saveJSON(STORAGE_ACCOUNTS, ACCOUNTS);
+  // set UI initial values
+  autoThreshold.value = DEFAULT_THRESHOLD;
 })();
-
 </script>
 </body>
 </html>
