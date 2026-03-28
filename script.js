@@ -51,7 +51,13 @@ function placePixels() {
      let nx = x + i, ny = y + j;
      if (nx >= 0 && nx < cols && ny >= 0 && ny < rows) {
        if (grid[nx][ny].type === window.EMPTY || currentMode === 'eraser') {
-           if (currentMode === 'water') {
+           
+           // NEW: Make seeds sparse! Only a 3% chance to place a seed per pixel in the brush area.
+           if (currentMode === 'seed') {
+               if (Math.random() < 0.03) {
+                   grid[nx][ny] = { type: window.SEED, color: window.getSeedColor() };
+               }
+           } else if (currentMode === 'water') {
                const h = 195 + Math.random() * 15;
                grid[nx][ny] = { type: window.WATER, color: `hsl(${h}, 85%, ${45 + Math.random() * 15}%)` };
            } else if (currentMode === 'fire') {
@@ -68,10 +74,9 @@ function placePixels() {
                grid[nx][ny] = { type: window.SNOW, color: window.getSnowColor() };
            } else if (currentMode === 'soil') {
                grid[nx][ny] = { type: window.SOIL, color: window.getSoilColor() };
-           } else if (currentMode === 'seed') {
-               grid[nx][ny] = { type: window.SEED, color: window.getSeedColor() };
            } else if (currentMode === 'plant') {
-               grid[nx][ny] = { type: window.PLANT, color: window.getPlantColor(), growth: 5 };
+               // Manually drawing a plant tip with energy
+               grid[nx][ny] = { type: window.PLANT, color: window.getPlantColor(), isTip: true, energy: 15 };
            } else if (currentMode === 'wall') {
                grid[nx][ny] = { type: window.WALL, color: '#444' };
            } else if (currentMode === 'eraser') {
@@ -128,7 +133,6 @@ function update() {
      else if (cell.type === window.OIL) window.updateOil(x, y, grid, nextGrid, cols, rows);
      else if (cell.type === window.COAL) window.updateCoal(x, y, grid, nextGrid, cols, rows);
      else if (cell.type === window.SNOW) window.updateSnow(x, y, grid, nextGrid, cols, rows);
-     // NEW UPDATES
      else if (cell.type === window.SOIL) window.updateSoil(x, y, grid, nextGrid, cols, rows);
      else if (cell.type === window.SEED) window.updateSeed(x, y, grid, nextGrid, cols, rows);
      else if (cell.type === window.PLANT) window.updatePlant(x, y, grid, nextGrid, cols, rows);
