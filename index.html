@@ -28,6 +28,10 @@
    button#btnOil.active { background: #2b2b2b; color: #fff; border-color: #000; }
    button#btnCoal.active { background: #111; color: #fff; border-color: #000; }
    button#btnSnow.active { background: #e0e0e0; color: #000; border-color: #fff; }
+   /* NEW BUTTON STYLES */
+   button#btnSoil.active { background: #5c3a21; color: #fff; border-color: #3e2615; }
+   button#btnSeed.active { background: #c2a878; color: #000; border-color: #a38959; }
+   button#btnPlant.active { background: #4caf50; color: #fff; border-color: #2e7d32; }
   
    #sizeDisplay { color: #008cff; font-family: monospace; font-size: 12px; min-width: 50px; }
   
@@ -46,6 +50,9 @@
        <button id="btnFire" onclick="setMode('fire')">FIRE</button>
        <button id="btnWood" onclick="setMode('wood')">WOOD</button>
        <button id="btnSand" onclick="setMode('sand')">SAND</button>
+       <button id="btnSoil" onclick="setMode('soil')">SOIL</button>
+       <button id="btnSeed" onclick="setMode('seed')">SEED</button>
+       <button id="btnPlant" onclick="setMode('plant')">PLANT</button>
        <button id="btnOil" onclick="setMode('oil')">OIL</button>
        <button id="btnCoal" onclick="setMode('coal')">COAL</button>
        <button id="btnSnow" onclick="setMode('snow')">SNOW</button>
@@ -71,6 +78,9 @@
  <script src="oil.js"></script>
  <script src="coal.js"></script>
  <script src="snow.js"></script>
+ <script src="soil.js"></script>
+ <script src="plant.js"></script>
+ <script src="seed.js"></script>
  <script src="script.js"></script>
 </body>
 </html>
