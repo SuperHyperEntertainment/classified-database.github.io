@@ -1,12 +1,11 @@
 window.EMPTY = 0; window.WATER = 1; window.WALL = 2;
 window.FIRE = 3; window.SMOKE = 4; window.STEAM = 5;
-window.WOOD = 6;
-
+window.WOOD = 6; window.SAND = 7; window.OIL = 8;
+window.COAL = 9; window.SNOW = 10;
 
 window.getFireColor = () => `hsl(${10 + Math.random() * 20}, 100%, ${50 + Math.random() * 20}%)`;
 window.getSmokeColor = () => `rgba(70, 70, 70, ${0.15 + Math.random() * 0.15})`;
-window.getSteamColor = () => `rgba(80, 120, 200, ${0.25 + Math.random() * 0.2})`; // Darker Bluish
-
+window.getSteamColor = () => `rgba(80, 120, 200, ${0.25 + Math.random() * 0.2})`;
 
 window.updateFire = function(x, y, grid, nextGrid, cols, rows) {
    if (Math.random() < 0.03) {
@@ -14,23 +13,36 @@ window.updateFire = function(x, y, grid, nextGrid, cols, rows) {
        return;
    }
 
-
    let neighbors = [{x:0,y:1}, {x:0,y:-1}, {x:1,y:0}, {x:-1,y:0}];
    for(let n of neighbors) {
        let nx = x + n.x, ny = y + n.y;
        if(nx >= 0 && nx < cols && ny >= 0 && ny < rows) {
            let target = grid[nx][ny];
+           
            if(target.type === window.WATER) {
                nextGrid[nx][ny] = { type: window.STEAM, color: window.getSteamColor() };
                nextGrid[x][y] = { type: window.SMOKE, color: window.getSmokeColor() };
                return;
            }
+           if(target.type === window.SNOW) {
+               nextGrid[nx][ny] = { type: window.WATER, color: `hsl(195, 85%, 50%)` }; // Fire melts snow to water
+               nextGrid[x][y] = { type: window.EMPTY }; // Fire dies
+               return;
+           }
            if(target.type === window.WOOD && Math.random() < 0.1) {
                nextGrid[nx][ny] = { type: window.FIRE, color: window.getFireColor(), life: 150 + Math.random() * 100 };
            }
+           if(target.type === window.OIL) {
+               nextGrid[nx][ny] = { type: window.FIRE, color: window.getFireColor(), life: 100 + Math.random() * 50 };
+               if (ny - 1 >= 0 && grid[nx][ny-1].type === window.EMPTY) {
+                   nextGrid[nx][ny-1] = { type: window.SMOKE, color: window.getSmokeColor() }; // Lots of smoke
+               }
+           }
+           if(target.type === window.COAL && !target.burning && Math.random() < 0.05) {
+               nextGrid[nx][ny] = { ...target, burning: true, color: window.getCoalColor(true) };
+           }
        }
    }
-
 
    let cell = nextGrid[x][y];
    if (cell.life !== undefined) cell.life--;
@@ -45,7 +57,6 @@ window.updateFire = function(x, y, grid, nextGrid, cols, rows) {
        }
    }
 };
-
 
 window.updateGas = function(x, y, grid, nextGrid, cols, rows) {
    if(y > 0) {
