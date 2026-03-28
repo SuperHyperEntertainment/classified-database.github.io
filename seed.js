@@ -3,7 +3,6 @@ window.getSeedColor = () => `#c2a878`;
 window.updateSeed = function(x, y, grid, nextGrid, cols, rows) {
     let cell = grid[x][y];
 
-    // 1. Fall logic (identical to soil)
     let movedX = x, movedY = y;
     if (y + 1 < rows && nextGrid[x][y+1].type === window.EMPTY) {
         nextGrid[x][y+1] = cell; nextGrid[x][y] = {type: window.EMPTY};
@@ -16,11 +15,9 @@ window.updateSeed = function(x, y, grid, nextGrid, cols, rows) {
         }
     }
 
-    // 2. Germination (must be near SOIL and touch WATER)
     let isTouchingSoil = false;
     let waterToDrink = null;
     
-    // Check neighbors for soil and water
     let neighbors = [{x:0,y:1}, {x:0,y:-1}, {x:1,y:0}, {x:-1,y:0}, {x:-1,y:1}, {x:1,y:1}];
     for(let n of neighbors) {
         let nx = movedX + n.x, ny = movedY + n.y;
@@ -30,9 +27,9 @@ window.updateSeed = function(x, y, grid, nextGrid, cols, rows) {
         }
     }
 
-    // If conditions are met, sprout!
+    // Give the new plant tip an "energy" pool so it eventually stops growing
     if (isTouchingSoil && waterToDrink) {
-        nextGrid[waterToDrink.x][waterToDrink.y] = { type: window.EMPTY }; // Consume water
-        nextGrid[movedX][movedY] = { type: window.PLANT, color: window.getPlantColor(), growth: 5 }; 
+        nextGrid[waterToDrink.x][waterToDrink.y] = { type: window.EMPTY }; 
+        nextGrid[movedX][movedY] = { type: window.PLANT, color: window.getPlantColor(), isTip: true, energy: 15 }; 
     }
 };
