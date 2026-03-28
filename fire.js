@@ -1,7 +1,8 @@
 window.EMPTY = 0; window.WATER = 1; window.WALL = 2;
 window.FIRE = 3; window.SMOKE = 4; window.STEAM = 5;
 window.WOOD = 6; window.SAND = 7; window.OIL = 8;
-window.COAL = 9; window.SNOW = 10;
+window.COAL = 9; window.SNOW = 10; 
+window.SOIL = 11; window.SEED = 12; window.PLANT = 13; // NEW CONSTANTS
 
 window.getFireColor = () => `hsl(${10 + Math.random() * 20}, 100%, ${50 + Math.random() * 20}%)`;
 window.getSmokeColor = () => `rgba(70, 70, 70, ${0.15 + Math.random() * 0.15})`;
@@ -25,6 +26,10 @@ window.updateFire = function(x, y, grid, nextGrid, cols, rows) {
            }
            if(target.type === window.WOOD && Math.random() < 0.1) {
                nextGrid[nx][ny] = { type: window.FIRE, color: window.getFireColor(), life: 150 + Math.random() * 100 };
+           }
+           // NEW: Plant and Seed Burning
+           if((target.type === window.PLANT || target.type === window.SEED) && Math.random() < 0.2) {
+               nextGrid[nx][ny] = { type: window.FIRE, color: window.getFireColor(), life: 60 + Math.random() * 40 };
            }
        }
    }
