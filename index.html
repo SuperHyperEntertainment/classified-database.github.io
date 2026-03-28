@@ -12,20 +12,26 @@
    }
    #top-bar.minimized { transform: translateY(-80%); }
   
-   .content { padding: 10px 20px; display: flex; align-items: center; gap: 15px; }
-   .btn-group { display: flex; gap: 5px; border-right: 1px solid #444; padding-right: 15px; }
+   .content { padding: 10px 20px; display: flex; align-items: center; gap: 15px; flex-wrap: wrap; }
+   .btn-group { display: flex; gap: 5px; border-right: 1px solid #444; padding-right: 15px; flex-wrap: wrap;}
    .size-controls { display: flex; align-items: center; gap: 10px; padding-left: 10px; }
   
    button {
      padding: 8px 16px; cursor: pointer; background: #2a2a2a;
      color: #aaa; border: 1px solid #444; border-radius: 4px;
-     font-size: 11px; font-weight: bold;
+     font-size: 11px; font-weight: bold; transition: 0.1s;
    }
+   
+   /* Active Button Colors */
    button.active { background: #008cff; color: white; border-color: #00a2ff; }
-   button#btnFire.active { background: #ff4400; border-color: #ff6600; }
-   button#btnWood.active { background: #5d4037; border-color: #8d6e63; }
+   button#btnFire.active { background: #ff4400; color: white; border-color: #ff6600; }
+   button#btnWood.active { background: #5d4037; color: white; border-color: #8d6e63; }
+   button#btnSand.active { background: #e6c229; color: black; border-color: #d4af37; }
+   button#btnOil.active { background: #111111; color: #a855f7; border-color: #333; }
+   button#btnCoal.active { background: #222222; color: #ff5500; border-color: #000; }
+   button#btnSnow.active { background: #e0f7fa; color: black; border-color: #b2ebf2; }
   
-   #sizeDisplay { color: #008cff; font-family: monospace; font-size: 12px; min-width: 50px; }
+   #sizeDisplay { color: #008cff; font-family: monospace; font-size: 12px; min-width: 50px; text-align: center;}
   
    #toggle-btn {
      position: absolute; bottom: -25px; right: 20px;
@@ -41,10 +47,13 @@
        <button id="btnWater" class="active" onclick="setMode('water')">WATER</button>
        <button id="btnFire" onclick="setMode('fire')">FIRE</button>
        <button id="btnWood" onclick="setMode('wood')">WOOD</button>
+       <button id="btnSand" onclick="setMode('sand')">SAND</button>
+       <button id="btnOil" onclick="setMode('oil')">OIL</button>
+       <button id="btnCoal" onclick="setMode('coal')">COAL</button>
+       <button id="btnSnow" onclick="setMode('snow')">SNOW</button>
        <button id="btnWall" onclick="setMode('wall')">WALL</button>
        <button id="btnEraser" onclick="setMode('eraser')">ERASER</button>
      </div>
-
 
      <div class="size-controls">
        <button onclick="changeBrushSize(-1)">-</button>
@@ -52,17 +61,18 @@
        <button onclick="changeBrushSize(1)">+</button>
      </div>
 
-
      <button onclick="resetGrid()" style="margin-left: auto; color: #ff4444;">PURGE GRID</button>
    </div>
    <button id="toggle-btn" onclick="toggleUI()">▲</button>
  </div>
  <canvas id="sim"></canvas>
 
-
  <script src="fire.js"></script>
  <script src="wood.js"></script>
+ <script src="sand.js"></script>
+ <script src="oil.js"></script>
+ <script src="coal.js"></script>
+ <script src="snow.js"></script>
  <script src="script.js"></script>
 </body>
 </html>
-
