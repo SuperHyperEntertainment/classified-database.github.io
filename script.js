@@ -66,6 +66,12 @@ function placePixels() {
                grid[nx][ny] = { type: window.COAL, color: window.getCoalColor(), burning: false };
            } else if (currentMode === 'snow') {
                grid[nx][ny] = { type: window.SNOW, color: window.getSnowColor() };
+           } else if (currentMode === 'soil') {
+               grid[nx][ny] = { type: window.SOIL, color: window.getSoilColor() };
+           } else if (currentMode === 'seed') {
+               grid[nx][ny] = { type: window.SEED, color: window.getSeedColor() };
+           } else if (currentMode === 'plant') {
+               grid[nx][ny] = { type: window.PLANT, color: window.getPlantColor(), growth: 5 };
            } else if (currentMode === 'wall') {
                grid[nx][ny] = { type: window.WALL, color: '#444' };
            } else if (currentMode === 'eraser') {
@@ -122,6 +128,10 @@ function update() {
      else if (cell.type === window.OIL) window.updateOil(x, y, grid, nextGrid, cols, rows);
      else if (cell.type === window.COAL) window.updateCoal(x, y, grid, nextGrid, cols, rows);
      else if (cell.type === window.SNOW) window.updateSnow(x, y, grid, nextGrid, cols, rows);
+     // NEW UPDATES
+     else if (cell.type === window.SOIL) window.updateSoil(x, y, grid, nextGrid, cols, rows);
+     else if (cell.type === window.SEED) window.updateSeed(x, y, grid, nextGrid, cols, rows);
+     else if (cell.type === window.PLANT) window.updatePlant(x, y, grid, nextGrid, cols, rows);
    }
  }
  grid = nextGrid;
