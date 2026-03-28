@@ -30,6 +30,6 @@ window.updateSeed = function(x, y, grid, nextGrid, cols, rows) {
     // Give the new plant tip an "energy" pool so it eventually stops growing
     if (isTouchingSoil && waterToDrink) {
         nextGrid[waterToDrink.x][waterToDrink.y] = { type: window.EMPTY }; 
-        nextGrid[movedX][movedY] = { type: window.PLANT, color: window.getPlantColor(), isTip: true, energy: 15 }; 
+        nextGrid[movedX][movedY] = { type: window.PLANT, color: window.getPlantColor(), isTip: true, energy: 40 }; 
     }
 };
