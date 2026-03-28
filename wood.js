@@ -3,7 +3,6 @@ window.getWoodColor = () => {
  return shades[Math.floor(Math.random() * shades.length)];
 };
 
-
 window.handleWoodBurning = function(x, y, grid, nextGrid, cols, rows) {
  const neighbors = [{x:0,y:1}, {x:0,y:-1}, {x:1,y:0}, {x:-1,y:0}];
  for (let n of neighbors) {
