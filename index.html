@@ -1,491 +1,68 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Silas — Learning Classified AI Terminal</title>
-<style>
-  /* CRT theme: green monochrome, warped screen, static overlay */
-  :root{--green:#00ff00;--bg:#000;--panel-w:86vw;--panel-h:90vh}
-  html,body{height:100%;margin:0;background:var(--bg);color:var(--green);font-family:"Courier New",monospace;display:flex;align-items:center;justify-content:center}
-  #terminal{position:relative;width:var(--panel-w);height:var(--panel-h);transform:scale(1,1.02) skewY(-0.5deg);box-sizing:border-box;border:2px solid rgba(0,255,0,0.12);overflow:hidden}
-  #static{pointer-events:none;position:absolute;inset:0;background:repeating-linear-gradient(rgba(0,255,0,0.03) 0 1px,transparent 1px 2px);animation:staticAnim .05s infinite;z-index:900}
-  @keyframes staticAnim{0%{background-position:0 0}100%{background-position:0 100%}}
-  .container{display:flex;height:100%}
-  .left{width:34%;border-right:2px solid var(--green);box-sizing:border-box;padding:18px;display:flex;flex-direction:column;gap:12px}
-  .right{flex:1;display:flex;flex-direction:column;padding:18px;box-sizing:border-box;gap:8px;overflow:hidden}
-  h2{margin:4px 0 8px 0}
-  input,textarea,select,button{background:transparent;border:2px solid var(--green);color:var(--green);font-family:inherit;padding:8px;box-sizing:border-box}
-  button{cursor:pointer}
-  #loginBox{width:100%;max-width:340px;margin:auto}
-  #welcomeMsg{font-size:28px;font-weight:bold;text-align:center;margin-bottom:6px}
-  #output{flex:1;overflow:auto;border-top:2px solid var(--green);padding-top:10px;white-space:pre-wrap}
-  .message{margin:6px 0}
-  .you::before{content:"You: ";font-weight:bold}
-  .ai::before{content:"AI: ";font-weight:bold}
-  .sys::before{content:"SYS: ";font-weight:bold}
-  .panelTitle{font-size:14px;margin:6px 0 0 0}
-  .small{font-size:12px;color:rgba(0,255,0,0.8)}
-  .pendingItem{border:1px dashed rgba(0,255,0,0.12);padding:8px;margin:6px 0}
-  .ownerControls{margin-top:auto}
-  .flexRow{display:flex;gap:8px;align-items:center}
-  label{display:block;margin:6px 0;font-size:13px}
-  .kbd{font-family:monospace;background:rgba(0,255,0,0.04);padding:2px 6px;border-radius:4px}
-  .muted{color:rgba(0,255,0,0.5)}
-  .hint{font-size:12px;color:rgba(0,255,0,0.6)}
-  @media(max-width:900px){.container{flex-direction:column}.left{width:100%;border-right:none;border-bottom:2px solid var(--green)}}
-</style>
+ <style>
+   body { margin: 0; background: #050505; overflow: hidden; font-family: sans-serif; }
+   canvas { display: block; image-rendering: pixelated; cursor: crosshair; }
+  
+   #top-bar {
+     position: fixed; top: 0; left: 0; width: 100%;
+     background: #1a1a1a; border-bottom: 2px solid #333;
+     z-index: 100; transition: transform 0.3s ease;
+   }
+   #top-bar.minimized { transform: translateY(-80%); }
+  
+   .content { padding: 10px 20px; display: flex; align-items: center; gap: 15px; }
+   .btn-group { display: flex; gap: 5px; border-right: 1px solid #444; padding-right: 15px; }
+   .size-controls { display: flex; align-items: center; gap: 10px; padding-left: 10px; }
+  
+   button {
+     padding: 8px 16px; cursor: pointer; background: #2a2a2a;
+     color: #aaa; border: 1px solid #444; border-radius: 4px;
+     font-size: 11px; font-weight: bold;
+   }
+   button.active { background: #008cff; color: white; border-color: #00a2ff; }
+   button#btnFire.active { background: #ff4400; border-color: #ff6600; }
+   button#btnWood.active { background: #5d4037; border-color: #8d6e63; }
+  
+   #sizeDisplay { color: #008cff; font-family: monospace; font-size: 12px; min-width: 50px; }
+  
+   #toggle-btn {
+     position: absolute; bottom: -25px; right: 20px;
+     background: #1a1a1a; border: 2px solid #333; border-top: none;
+     border-radius: 0 0 5px 5px; height: 25px; cursor: pointer; color: #555;
+   }
+ </style>
 </head>
 <body>
-  <div id="terminal" role="application" aria-label="Silas learning terminal">
-    <div class="container">
-      <div class="left" id="leftPanel">
-        <div id="loginBox">
-          <h2>Login / Owner Setup</h2>
-          <div class="hint">If this is the first run you will be prompted to create an owner account — no secret values are embedded in this file.</div>
-          <input id="usernameInput" placeholder="Username" autocomplete="username" /><br />
-          <input id="passwordInput" placeholder="Password" type="password" autocomplete="current-password" /><br />
-          <label class="small muted">If you haven't set up an owner, check "Create owner" below and set credentials.</label>
-          <div class="flexRow">
-            <label style="display:flex;align-items:center;gap:8px"><input type="checkbox" id="createOwner"> Create owner</label>
-            <button id="loginBtn">Login</button>
-          </div>
-          <p id="loginMsg" class="small"></p>
-        </div>
+ <div id="top-bar">
+   <div class="content">
+     <div class="btn-group">
+       <button id="btnWater" class="active" onclick="setMode('water')">WATER</button>
+       <button id="btnFire" onclick="setMode('fire')">FIRE</button>
+       <button id="btnWood" onclick="setMode('wood')">WOOD</button>
+       <button id="btnWall" onclick="setMode('wall')">WALL</button>
+       <button id="btnEraser" onclick="setMode('eraser')">ERASER</button>
+     </div>
 
-        <div id="ownerPanel" style="display:none;">
-          <h2>Owner Approvals</h2>
-          <div class="small">Pending examples awaiting your approval (owners only).</div>
-          <div id="pendingList" style="max-height:32vh;overflow:auto;margin-top:8px"></div>
 
-          <div class="panelTitle">Manual Training</div>
-          <div class="small">Create or extend keywords manually (owners only).</div>
-          <label>Keyword (single token)
-            <input id="manualKeyword" placeholder="keyword" />
-          </label>
-          <label>Information / Note
-            <textarea id="manualInfo" rows="3" placeholder="What should the AI say?"></textarea>
-          </label>
-          <label>Date added
-            <input id="manualDate" placeholder="YYYY-MM-DD or 9/13/2025" />
-          </label>
-          <div class="flexRow">
-            <button id="createKeywordBtn">Create/Update Keyword</button>
-            <button id="flushPendingBtn">Clear Pending</button>
-          </div>
+     <div class="size-controls">
+       <button onclick="changeBrushSize(-1)">-</button>
+       <span id="sizeDisplay">SIZE: 2</span>
+       <button onclick="changeBrushSize(1)">+</button>
+     </div>
 
-          <div class="ownerControls">
-            <div class="panelTitle">Owner settings</div>
-            <label><input type="checkbox" id="autoAcceptToggle" /> Auto-accept suggestions above threshold</label>
-            <label>Auto-accept threshold (0.0 - 1.0)
-              <input id="autoThreshold" type="number" step="0.05" min="0" max="1" value="0.75" />
-            </label>
-            <div style="margin-top:8px">
-              <button id="exportBtn">Export DB & Pending</button>
-              <button id="importBtn">Import DB & Pending</button>
-              <input id="importFile" type="file" accept=".json" style="display:none" />
-            </div>
-          </div>
-        </div>
 
-        <div style="margin-top:12px">
-          <div class="panelTitle">Status</div>
-          <div class="small">Persistence: <span class="kbd">localStorage</span></div>
-          <div class="small">Owner accounts: <span id="ownerList" class="kbd"></span></div>
-          <div class="small muted">No access codes or sensitive credentials are baked into this file.</div>
-        </div>
-      </div>
+     <button onclick="resetGrid()" style="margin-left: auto; color: #ff4444;">PURGE GRID</button>
+   </div>
+   <button id="toggle-btn" onclick="toggleUI()">▲</button>
+ </div>
+ <canvas id="sim"></canvas>
 
-      <div class="right">
-        <div id="welcomeMsg" aria-live="polite"></div>
 
-        <div id="output" role="log" aria-live="polite"></div>
-
-        <div id="aiInput" style="display:none">
-          <div class="small">Note: AI responds to <b>keywords</b> contained in your input (not full natural questions).</div>
-          <div style="display:flex;gap:8px;margin-top:8px">
-            <input id="userQuery" placeholder="Type a keyword or sentence..." />
-            <button id="submitQuery">Submit</button>
-            <button id="clearBtn" title="Clear chat">Clear</button>
-          </div>
-          <div class="hint" style="margin-top:6px">The AI learns from examples. Owners review pending examples to teach the AI.</div>
-        </div>
-      </div>
-    </div>
-
-    <div id="static"></div>
-  </div>
-
-<script>
-/* ============================
-  Silas — Learning AI Terminal
-  - Large single-file implementation
-  - No hardcoded secrets: owners create accounts locally
-  - Stores DB & pending examples in localStorage
-  - Uses normalized Levenshtein + example matching for fuzzy suggestions
-  - Owners approve/reject pending examples; manual keyword creation possible
-  - CRT UI + chat style preserved
-============================ */
-
-/* -------------------------
-   Storage keys & initial data
-   (Important: no embedded passwords or master code here)
---------------------------*/
-const STORAGE_DB = "silas_learning_db_v2";
-const STORAGE_PENDING = "silas_learning_pending_v2";
-const STORAGE_ACCOUNTS = "silas_learning_accounts_v2";
-
-/* Initial knowledge base (safe to include informational entries) */
-const initialDB = [
-  { keyword: "salesmen", info: "Salesmen is the most relentless opponent of our organization, constantly attempting to sabotage and undermine our efforts. While he fails in most of his schemes, occasional victories are possible; caution is necessary.", date: "2025-09-13", examples: ["tell me about salesmen", "who is salesmen"] },
-  { keyword: "parker", info: "Parker is a trusted assistant of our organization with his own login credentials. Handle tasks related to him through proper channels only.", date: "2025-09-13", examples: ["parker info"] },
-  { keyword: "silas", info: "Silas is the official AI of this organization, designed to provide classified keyword-based responses and maintain operational security. Silas responds only to approved keywords and ensures sensitive information is delivered safely.", date: "2025-09-13", examples: ["who is silas", "silas info"] },
-  { keyword: "patrick", info: "Patrick *REDACTED* is the founder and owner. He rose from a difficult childhood to become a game developer and animator. He now leads the 'Friend or Foe' AI project — a high-intelligence in-game AI that can betray players as part of its design, used across multiple mod-capable titles.", date: "2025-09-13", examples: ["patrick backstory", "who is patrick"] },
-  { keyword: "kaylee", info: "Kaylee is a talented Voice Actor within the organization and is expected to soon take on partial ownership. Her creative contributions are vital to the group.", date: "2025-09-13", examples: ["kaylee role"] }
-];
-
-/* Accounts object will be created by user (no credentials included here) */
-const initialAccounts = {}; // empty on purpose — owner must create locally
-
-/* -------------------------
-   Utility: localStorage persistence
---------------------------*/
-function saveJSON(key, obj){ localStorage.setItem(key, JSON.stringify(obj)); }
-function loadJSON(key, fallback){ try{ const s = localStorage.getItem(key); return s? JSON.parse(s): fallback; }catch(e){ return fallback; } }
-
-let DB = loadJSON(STORAGE_DB, initialDB.slice());
-let PENDING = loadJSON(STORAGE_PENDING, []);
-let ACCOUNTS = loadJSON(STORAGE_ACCOUNTS, initialAccounts);
-
-/* -------------------------
-   UI refs
---------------------------*/
-const loginBox = document.getElementById("loginBox");
-const loginBtn = document.getElementById("loginBtn");
-const usernameInput = document.getElementById("usernameInput");
-const passwordInput = document.getElementById("passwordInput");
-const createOwnerCheckbox = document.getElementById("createOwner");
-const loginMsg = document.getElementById("loginMsg");
-const ownerPanel = document.getElementById("ownerPanel");
-const ownerList = document.getElementById("ownerList");
-const pendingList = document.getElementById("pendingList");
-const manualKeyword = document.getElementById("manualKeyword");
-const manualInfo = document.getElementById("manualInfo");
-const manualDate = document.getElementById("manualDate");
-const createKeywordBtn = document.getElementById("createKeywordBtn");
-const flushPendingBtn = document.getElementById("flushPendingBtn");
-const autoAcceptToggle = document.getElementById("autoAcceptToggle");
-const autoThreshold = document.getElementById("autoThreshold");
-
-const welcomeMsg = document.getElementById("welcomeMsg");
-const output = document.getElementById("output");
-const aiInput = document.getElementById("aiInput");
-const userQuery = document.getElementById("userQuery");
-const submitQuery = document.getElementById("submitQuery");
-const clearBtn = document.getElementById("clearBtn");
-const exportBtn = document.getElementById("exportBtn");
-const importBtn = document.getElementById("importBtn");
-const importFile = document.getElementById("importFile");
-
-/* -------------------------
-   Misc settings
---------------------------*/
-const DEFAULT_THRESHOLD = 0.75;
-const INSULTS = [
-  "Are you even trying?",
-  "Wrong input. Try reading next time.",
-  "This isn't rocket science… or is it?",
-  "Seriously? That's your question?",
-  "Pathetic. Do better."
-];
-
-/* -------------------------
-   Levenshtein distance (normalized similarity 0..1)
---------------------------*/
-function levenshtein(a,b){
-  a = a || ""; b = b || "";
-  if(a===b) return 0;
-  const m=a.length, n=b.length;
-  if(m===0) return n;
-  if(n===0) return m;
-  const v0 = new Array(n+1), v1 = new Array(n+1);
-  for(let j=0;j<=n;j++) v0[j]=j;
-  for(let i=0;i<m;i++){
-    v1[0]=i+1;
-    for(let j=0;j<n;j++){
-      const cost = a[i]===b[j]?0:1;
-      v1[j+1] = Math.min(v1[j]+1, v0[j+1]+1, v0[j]+cost);
-    }
-    for(let j=0;j<=n;j++) v0[j]=v1[j];
-  }
-  return v1[n];
-}
-function normalizedSimilarity(a,b){
-  a = String(a||""); b = String(b||"");
-  if(a.length===0 && b.length===0) return 1;
-  const dist = levenshtein(a,b);
-  const maxLen = Math.max(a.length,b.length);
-  if(maxLen===0) return 1;
-  return 1 - (dist / maxLen);
-}
-
-/* -------------------------
-   Basic safe hashing for local credential storage (not cryptographically strong)
-   - purpose: avoid storing plain text in accidental exports; owner can choose stronger approach offline
---------------------------*/
-function simpleHash(s){
-  let h=2166136261>>>0;
-  for(let i=0;i<s.length;i++){ h = Math.imul(h^s.charCodeAt(i),16777619); }
-  return (h>>>0).toString(16);
-}
-
-/* -------------------------
-   Helper: persist everything
---------------------------*/
-function persistAll(){ saveJSON(STORAGE_DB, DB); saveJSON(STORAGE_PENDING, PENDING); saveJSON(STORAGE_ACCOUNTS, ACCOUNTS); }
-
-/* -------------------------
-   Chat UI helpers (typing effect)
---------------------------*/
-function appendMessageTyped(text, cls="ai", speed=12){
-  const p = document.createElement("div"); p.className = `message ${cls}`; output.appendChild(p);
-  let i=0;
-  const step = ()=>{
-    if(i<text.length){ p.innerHTML += text[i++]; output.scrollTop = output.scrollHeight; setTimeout(step, speed); }
-  };
-  step();
-}
-function appendMessageInstant(text, cls="ai"){
-  const p = document.createElement("div"); p.className = `message ${cls}`; p.textContent = text; output.appendChild(p); output.scrollTop = output.scrollHeight;
-}
-
-/* -------------------------
-   Render pending queue (owner)
---------------------------*/
-function renderPending(){
-  pendingList.innerHTML = "";
-  if(PENDING.length===0){ pendingList.innerHTML = "<div class='small'>No pending examples.</div>"; return; }
-  PENDING.slice().reverse().forEach(item=>{
-    const wrapper = document.createElement("div"); wrapper.className = "pendingItem";
-    const ts = new Date(item.timestamp).toLocaleString();
-    wrapper.innerHTML = `<div class="small">Example: <span class="kbd">${escapeHtml(item.query)}</span></div>
-      <div class="small">Suggested: <span class="kbd">${escapeHtml(item.suggestedKeyword || "—")}</span> (score: ${item.bestScore.toFixed(2)})</div>
-      <div class="small">When: ${ts}</div>`;
-    const approve = document.createElement("button"); approve.textContent="Approve"; approve.onclick = ()=>approvePending(item);
-    const createNew = document.createElement("button"); createNew.textContent="Create New Keyword"; createNew.onclick = ()=>createFromPending(item);
-    const reject = document.createElement("button"); reject.textContent="Reject"; reject.onclick = ()=>rejectPending(item);
-    wrapper.appendChild(document.createElement("br"));
-    wrapper.appendChild(approve); wrapper.appendChild(createNew); wrapper.appendChild(reject);
-    pendingList.appendChild(wrapper);
-  });
-}
-
-/* -------------------------
-   Approve / reject helpers
---------------------------*/
-function approvePending(item){
-  if(item.suggestedKeyword){
-    const entry = DB.find(d=>d.keyword===item.suggestedKeyword);
-    if(entry){
-      entry.examples = entry.examples || [];
-      if(!entry.examples.includes(item.query)) entry.examples.push(item.query);
-      persistAll();
-      appendMessageInstant(`SYS: Approved example and attached to '${entry.keyword}'.`, "sys");
-    }
-  }
-  PENDING = PENDING.filter(x=>x!==item); persistAll(); renderPending();
-}
-function rejectPending(item){
-  PENDING = PENDING.filter(x=>x!==item); persistAll(); renderPending(); appendMessageInstant("SYS: Rejected example.", "sys");
-}
-function createFromPending(item){
-  const kw = prompt("Keyword (single token) for this example:", item.suggestedKeyword||"").trim().toLowerCase();
-  if(!kw) return;
-  const info = prompt("Enter info text for this keyword (visible to logged users):", "");
-  const date = prompt("Date added (e.g. 2025-09-13):", new Date().toLocaleDateString());
-  DB.push({ keyword: kw, info: info || "No info provided.", date: date, examples: [item.query] });
-  PENDING = PENDING.filter(x=>x!==item); persistAll(); renderPending(); appendMessageInstant(`SYS: Created keyword '${kw}'.`, "sys");
-}
-
-/* -------------------------
-   Manual keyword create/update
---------------------------*/
-createKeywordBtn.addEventListener("click", ()=>{
-  const kw = (manualKeyword.value||"").toLowerCase().trim();
-  const info = manualInfo.value||"";
-  const date = manualDate.value||new Date().toLocaleDateString();
-  if(!kw){ alert("Keyword required."); return; }
-  const existing = DB.find(d=>d.keyword===kw);
-  if(existing){
-    existing.info = info || existing.info;
-    existing.date = date || existing.date;
-    appendMessageInstant(`SYS: Updated '${kw}'.`, "sys");
-  } else {
-    DB.push({keyword:kw, info:info||"No info", date:date, examples:[]});
-    appendMessageInstant(`SYS: Created '${kw}'.`, "sys");
-  }
-  manualKeyword.value=""; manualInfo.value=""; manualDate.value="";
-  persistAll();
-});
-
-/* -------------------------
-   Flush pending
---------------------------*/
-flushPendingBtn.addEventListener("click", ()=>{
-  if(!confirm("Clear pending examples?")) return;
-  PENDING = []; persistAll(); renderPending(); appendMessageInstant("SYS: Cleared pending queue.", "sys");
-});
-
-/* -------------------------
-   Export / Import DB & Pending
---------------------------*/
-exportBtn && exportBtn.addEventListener("click", ()=>{
-  const payload = { db: DB, pending: PENDING, accountsMeta: Object.keys(ACCOUNTS).map(u=>({user:u,isOwner:ACCOUNTS[u].isOwner})) };
-  const blob = new Blob([JSON.stringify(payload, null, 2)], {type:"application/json"});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a"); a.href = url; a.download = "silas_export.json"; a.click(); URL.revokeObjectURL(url);
-});
-
-importBtn && importBtn.addEventListener("click", ()=> importFile.click());
-importFile && importFile.addEventListener("change", (e)=>{
-  const f = e.target.files[0]; if(!f) return;
-  const reader = new FileReader();
-  reader.onload = ()=> {
-    try{
-      const parsed = JSON.parse(reader.result);
-      if(parsed.db) DB = parsed.db; if(parsed.pending) PENDING = parsed.pending;
-      persistAll(); renderPending(); appendMessageInstant("SYS: Import completed.", "sys");
-    }catch(err){ alert("Invalid file."); }
-  };
-  reader.readAsText(f);
-});
-
-/* -------------------------
-   Escaping helper
---------------------------*/
-function escapeHtml(str){ return String(str||"").replace(/[&<>"']/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])); }
-
-/* -------------------------
-   Core query processing + learning flow
---------------------------*/
-async function processQueryFlow(raw){
-  const query = (raw||"").trim();
-  if(!query) return;
-  appendMessageInstant(query, "you");
-  const qNorm = query.toLowerCase();
-
-  // 1) direct keyword containment (exact token match or substring)
-  let matched = DB.find(d => qNorm.includes(d.keyword.toLowerCase()));
-  if(matched){
-    appendMessageTyped(`Information found: ${matched.date} ${matched.info}`, "ai");
-    matched.examples = matched.examples || []; if(!matched.examples.includes(query)) matched.examples.push(query);
-    persistAll(); return;
-  }
-
-  // 2) fuzzy matching across keywords and examples
-  let best = {score:0, entry:null};
-  for(const entry of DB){
-    const key = entry.keyword.toLowerCase();
-    const simKey = normalizedSimilarity(qNorm, key);
-    let score = simKey;
-    if(entry.examples && entry.examples.length){
-      for(const ex of entry.examples){
-        const simEx = normalizedSimilarity(qNorm, (ex||"").toLowerCase());
-        if(simEx > score) score = simEx;
-      }
-    }
-    if(score > best.score){ best = {score, entry}; }
-  }
-
-  const threshold = parseFloat(autoThreshold.value) || DEFAULT_THRESHOLD;
-  if(best.entry && best.score >= threshold && autoAcceptToggle.checked){
-    // auto accept: reply and add example
-    appendMessageTyped(`Information found: ${best.entry.date} ${best.entry.info}`, "ai");
-    best.entry.examples = best.entry.examples || []; if(!best.entry.examples.includes(query)) best.entry.examples.push(query);
-    persistAll(); return;
-  }
-
-  // 3) otherwise: push a pending suggestion and insult
-  const suggestion = best.entry ? best.entry.keyword : null;
-  const pendingObj = { query: query, suggestedKeyword: suggestion, bestScore: best.score, timestamp: Date.now() };
-  PENDING.push(pendingObj); persistAll(); renderPending();
-
-  const insult = INSULTS[Math.floor(Math.random()*INSULTS.length)];
-  appendMessageTyped(insult, "ai");
-}
-
-/* -------------------------
-   Login / account handling
-   - No credentials in code. Owner(s) create credentials locally.
-   - Simple hash used to avoid raw password in exports.
---------------------------*/
-function refreshOwnerList(){
-  const owners = Object.keys(ACCOUNTS).filter(u=>ACCOUNTS[u].isOwner);
-  ownerList.textContent = owners.join(", ") || "none";
-}
-
-function loginFlow(){
-  const user = (usernameInput.value||"").trim();
-  const pass = (passwordInput.value||"").trim();
-  if(!user || !pass){ loginMsg.textContent = "Enter username & password."; return; }
-
-  // If "create owner" checked and there is no owner yet OR user wants to create new owner
-  if(createOwnerCheckbox.checked){
-    // Create account locally (owner)
-    ACCOUNTS[user] = { pwdHash: simpleHash(pass), isOwner:true };
-    saveJSON(STORAGE_ACCOUNTS, ACCOUNTS);
-    persistAll();
-    afterLoginSuccess(user);
-    return;
-  }
-
-  // If account exists, verify
-  const acct = ACCOUNTS[user];
-  if(!acct){ loginMsg.textContent = "Unknown account. To create an owner account, check 'Create owner' and set credentials."; return; }
-  if(acct.pwdHash !== simpleHash(pass)){ loginMsg.textContent = "Invalid credentials."; return; }
-  afterLoginSuccess(user);
-}
-
-function afterLoginSuccess(user){
-  loginMsg.textContent = "";
-  usernameInput.value=""; passwordInput.value=""; createOwnerCheckbox.checked=false;
-  loginBox.style.display = "none";
-  aiInput.style.display = "block";
-  welcomeMsg.textContent = (ACCOUNTS[user].display || `Welcome, ${user}`);
-  // ensure account has display name
-  ACCOUNTS[user].display = ACCOUNTS[user].display || `Welcome, ${user}`;
-  persistAll();
-  // show owner panel if owner
-  if(ACCOUNTS[user].isOwner) ownerPanel.style.display = "block";
-  renderPending(); refreshOwnerList();
-  appendMessageInstant(`${ACCOUNTS[user].display.split(", ")[1] || user}`, "ai");
-  appendMessageInstant("AI Terminal Activated. Responds based on keywords, not full questions. Awaiting query...", "ai");
-}
-
-/* -------------------------
-   Wire up UI events
---------------------------*/
-loginBtn.addEventListener("click", ()=>loginFlow());
-passwordInput.addEventListener("keydown", (e)=>{ if(e.key==="Enter") loginFlow(); });
-usernameInput.addEventListener("keydown", (e)=>{ if(e.key==="Enter") loginFlow(); });
-
-submitQuery.addEventListener("click", ()=>{ const q = userQuery.value||""; processQueryFlow(q); userQuery.value=""; });
-userQuery.addEventListener("keydown", (e)=>{ if(e.key==="Enter"){ const q = userQuery.value||""; processQueryFlow(q); userQuery.value=""; }});
-clearBtn.addEventListener("click", ()=>{ output.innerHTML=""; });
-
-refreshOwnerList();
-renderPending();
-
-/* -------------------------
-   Bootstrap: persist defaults if not present (DB present by design)
---------------------------*/
-(function bootstrap(){
-  if(!localStorage.getItem(STORAGE_DB)) saveJSON(STORAGE_DB, DB);
-  if(!localStorage.getItem(STORAGE_PENDING)) saveJSON(STORAGE_PENDING, PENDING);
-  if(!localStorage.getItem(STORAGE_ACCOUNTS)) saveJSON(STORAGE_ACCOUNTS, ACCOUNTS);
-  // set UI initial values
-  autoThreshold.value = DEFAULT_THRESHOLD;
-})();
-</script>
+ <script src="fire.js"></script>
+ <script src="wood.js"></script>
+ <script src="script.js"></script>
 </body>
 </html>
+
